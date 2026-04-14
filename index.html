@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stream Selector - All Channels</title>
+
   <style>
     html, body {
       margin: 0;
@@ -36,7 +37,6 @@
       font-size: 20px;
     }
 
-    /* Search bar */
     #searchBox {
       width: 100%;
       max-width: 500px;
@@ -49,9 +49,7 @@
       color: white;
       outline: none;
     }
-    #searchBox::placeholder { color: #888; }
 
-    /* Channel grid */
     #channelGrid {
       flex: 1;
       overflow-y: auto;
@@ -60,11 +58,6 @@
       gap: 8px;
       padding-right: 5px;
     }
-
-    /* Scrollbar styling */
-    #channelGrid::-webkit-scrollbar { width: 6px; }
-    #channelGrid::-webkit-scrollbar-track { background: #111; }
-    #channelGrid::-webkit-scrollbar-thumb { background: #e50914; border-radius: 3px; }
 
     .channel-btn {
       background: #1a1a1a;
@@ -92,32 +85,21 @@
       color: #ff6b6b;
       font-size: 12px;
     }
-    .channel-btn:hover .channel-number { color: white; }
+
+    .channel-btn:hover .channel-number {
+      color: white;
+    }
 
     .channel-name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       font-size: 12px;
       opacity: 0.95;
     }
 
-    .channel-url {
-      font-size: 10px;
-      opacity: 0.6;
-      font-family: monospace;
-      word-break: break-all;
-      display: none; /* Hidden by default, shown on hover if needed */
-    }
-
-    /* Player screen */
+    /* Player */
     #player {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: black;
       z-index: 9999;
     }
@@ -128,7 +110,6 @@
       border: none;
     }
 
-    /* Exit button */
     #exitBtn {
       position: fixed;
       top: 15px;
@@ -141,457 +122,476 @@
       border-radius: 6px;
       cursor: pointer;
       display: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background 0.2s;
     }
-    #exitBtn:hover { background: rgba(244, 6, 18, 1); }
 
-    /* Current stream indicator */
     #currentStream {
       position: fixed;
-      bottom: 15px;
+      bottom: 60px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10000;
       background: rgba(30, 30, 30, 0.95);
-      color: #eee;
       padding: 8px 16px;
       border-radius: 20px;
       font-size: 11px;
       display: none;
-      max-width: 95%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       font-family: monospace;
     }
 
-    /* Stats bar */
-    #stats {
-      text-align: center;
-      font-size: 11px;
-      opacity: 0.7;
-      padding: 5px 0;
-      border-top: 1px solid #333;
+    /* 🔥 Player Switch Bar (MATCHES YOUR STYLE) */
+    #playerSwitch {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 6px;
+      z-index: 10000;
     }
+
+    .player-btn {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: 0.15s;
+    }
+
+    .player-btn:hover {
+      background: #e50914;
+      border-color: #e50914;
+    }
+
+    .active-player {
+      background: #e50914;
+      border-color: #e50914;
+    }
+
   </style>
 </head>
+
 <body>
 
-  <!-- 🔍 Launcher: Channel Selector -->
-  <div id="launcher">
-    <header>
-      <h1>📺 Live Stream Channels</h1>
-      <input type="text" id="searchBox" placeholder="🔍 Search channels (e.g., 'Sky', 'ESPN', '304')...">
-    </header>
-    
-    <div id="channelGrid">
-      <!-- Channels injected by JavaScript -->
-    </div>
-    
-    <div id="stats">Loading channels...</div>
-  </div>
+<div id="launcher">
+  <header>
+    <h1>📺 Live Stream Channels</h1>
+    <input id="searchBox" placeholder="Search channels...">
+  </header>
 
-  <!-- ▶️ Fullscreen Player -->
-  <div id="player">
-    <iframe id="streamFrame" src="" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
-  </div>
+  <div id="channelGrid"></div>
+</div>
 
-  <!-- ✕ Exit Button -->
-  <button id="exitBtn">✕ Exit to Menu</button>
-  <div id="currentStream"></div>
+<div id="player">
+  <iframe id="streamFrame"></iframe>
+</div>
 
-  <script>
-      // 📋 Channel data: [id, name]
-      // Auto-generated from daddyhd.com list, URLs transformed to dlstreams.top format
-      const channels = [
-        [31, "TNT Sports 1 UK"], [32, "TNT Sports 2 UK"], [33, "TNT Sports 3 UK"], [34, "TNT Sports 4 UK"],
-        [35, "Sky Sports Football UK"], [36, "Sky Sports+ Plus"], [37, "Sky Sports Action UK"], [38, "Sky Sports Main Event"],
-        [39, "Fox Sports 1 USA"], [40, "Tennis Channel"], [41, "EuroSport 1 UK"], [42, "EuroSport 2 UK"],
-        [43, "DAZN LaLiga 2"], [44, "ESPN USA"], [45, "ESPN2 USA"], [46, "beIN Sports MENA English 3"],
-        [47, "Polsat Sport Poland"], [48, "Canal+ Sport Poland"], [49, "Sport TV1 Portugal"], [50, "Polsat Sport Extra Poland"],
-        [51, "abc usa"], [52, "CBS USA"], [53, "NBC USA"], [54, "FOX USA"], [56, "Supersport Football"],
-        [57, "EuroSport 1 Poland"], [58, "EuroSport 2 Poland"], [60, "Sky Sports F1 UK"], [61, "bein sports mena english 1"],
-        [62, "bein sports 1 turkey"], [63, "bein sports 2 turkey"], [64, "bein sports 3 turkey"], [65, "Sky Sports Cricket"],
-        [66, "TUDN USA"], [67, "bein sports 4 turkey"], [70, "Sky Sports Golf UK"], [71, "Eleven Sports 1 Poland"],
-        [72, "Eleven Sports 2 Poland"], [73, "Canal+ Sport 2 Poland"], [74, "Sport TV2 Portugal"], [75, "CANAL+ SPORT 5 Poland"],
-        [78, "SporTV Brasil"], [79, "SporTV2 Brasil"], [80, "SporTV3 Brasil"], [81, "ESPN Brasil"], [82, "ESPN2 Brasil"],
-        [83, "ESPN3 Brasil"], [84, "Movistar Laliga"], [85, "ESPN4 Brasil"], [87, "TNT Brasil"], [88, "Premier Brasil"],
-        [89, "Combate Brasil"], [90, "bein sports mena english 2"], [91, "bein sports 1 arabic"], [92, "bein sports 2 arabic"],
-        [93, "bein sports 3 arabic"], [94, "bein sports 4 arabic"], [95, "bein sports 5 arabic"], [96, "bein sports 6 arabic"],
-        [97, "bein sports 7 arabic"], [98, "bein sports 8 arabic"], [99, "bein sports 9 arabic"],
-        [100, "bein sports xtra 1"], [101, "Sport Klub 1 Serbia"], [102, "Sport Klub 2 Serbia"],
-        [103, "Sport Klub 3 Serbia"], [104, "Sport Klub 4 Serbia"], [111, "TSN1"], [112, "TSN2"], [113, "TSN3"],
-        [114, "TSN4"], [115, "TSN5"], [116, "bein sports 1 france"], [117, "bein sports 2 france"],
-        [118, "bein sports 3 france"], [119, "RMC Sport 1 France"], [120, "RMC Sport 2 France"], [121, "Canal+ France"],
-        [122, "Canal+ Sport France"], [123, "astro supersport 1"], [124, "astro supersport 2"], [125, "astro supersport 3"],
-        [126, "astro supersport 4"], [127, "Match TV Russia"], [128, "TVP Sport Poland"], [129, "Polsat Sport News Poland"],
-        [130, "Sky sports Premier League"], [131, "Telemundo"], [132, "Univision"], [133, "Unimas"],
-        [134, "arena sport 1 premium"], [135, "arena sport 2 premium"], [136, "Match Football 1 Russia"],
-        [137, "Match Football 2 Russia"], [138, "Match Football 3 Russia"], [139, "arena sport 3 premium"],
-        [140, "Sport 1 Israel"], [141, "Sport 2 Israel"], [142, "Sport 3 Israel"], [143, "Sport 4 Israel"],
-        [144, "Sport 5 Israel"], [145, "Sport 5 PLUS Israel"], [146, "Sport 5 Live Israel"], [147, "Sport 5 Star Israel"],
-        [148, "Sport 5 Gold Israel"], [149, "ESPN SUR"], [150, "ESPN2 SUR"], [206, "ahc (american heroes channel)"],
-        [207, "PPV Event"], [208, "Floracing"], [209, "PPV Event"],[210, "PBS USA USA"],
-        [222, "DAZN PPV"], [223, "TV3 Max Denmark"], [230, "DAZN 1 UK"], [259, "Canal+ Sport 3 Poland"],
-        [260, "Vodafone Sport"], [267, "Star Sports 1 IN"], [268, "Star Sports Hindi IN"], [269, "a sport pk"],
-        [270, "T Sports BD"], [271, "CANAL+ MotoGP France"], [272, "V Sport Motor Sweden"], [273, "Canal+ Formula 1"],
-        [274, "Sky Sports F1 DE"], [275, "Bandsports Brasil"], [276, "LaLigaTV UK"], [277, "NBC10 Philadelphia"],
-        [278, "Law & Crime Network"], [279, "FUSE TV USA"], [280, "CW PIX 11 USA"], [281, "Court TV USA"],
-        [282, "StarzPlay CricLife 3 HD"], [283, "antenna tv usa"], [284, "StarzPlay CricLife 1 HD"],
-        [285, "Discovery Velocity CA"], [287, "Pac-12 Network USA"], [288, "ESPNews"], [289, "Sport TV4 Portugal"],
-        [290, "Sport TV5 Portugal"], [291, "Sport TV6 Portugal"], [292, "Gol Mundial 1"], [293, "Reelz Channel"],
-        [294, "Science Channel"], [295, "adult swim"], [296, "Hallmark Movies & Mysterie"], [297, "Fox Business"],
-        [298, "FXX USA"], [299, "Magnolia Network"], [300, "CW USA"], [301, "Freeform"], [302, "a&e usa"],
-        [303, "amc usa"], [304, "animal planet"], [305, "bbc america (bbca)"], [306, "bet usa"], [307, "bravo usa"],
-        [308, "CBS Sports Network (CBSSN)"], [309, "CNBC USA"], [310, "Comedy Central"], [311, "Discovery Life Channel"],
-        [312, "Disney Channel"], [313, "Discovery Channel"], [314, "Disney XD"], [315, "E! Entertainment Television"],
-        [316, "ESPNU USA"], [317, "FX USA"], [318, "GOLF Channel USA"], [319, "Game Show Network"],
-        [320, "The Hallmark Channel"], [321, "HBO USA"], [322, "History USA"], [323, "Headline News"],
-        [324, "Investigation Discovery (ID USA)"], [325, "ION USA"], [326, "Lifetime Network"], [327, "MSNBC"],
-        [328, "National Geographic (NGC)"], [329, "NICK JR"], [330, "NICK"], [331, "Oprah Winfrey Network (OWN)"],
-        [332, "Oxygen True Crime"], [333, "Showtime USA"], [334, "Paramount Network"], [335, "Starz"], [336, "TBS USA"],
-        [337, "TLC"], [338, "TNT USA"], [339, "Cartoon Network"], [340, "Travel Channel"], [341, "TruTV USA"],
-        [342, "TVLAND"], [343, "USA Network"], [344, "VH1 USA"], [345, "CNN USA"], [346, "Willow Cricket"],
-        [347, "Fox News"], [348, "Dave"], [349, "bbc news channel hd"], [350, "ITV 1 UK"], [351, "ITV 2 UK"],
-        [352, "ITV 3 UK"], [353, "ITV 4 UK"], [354, "Channel 4 UK"], [355, "Channel 5 UK"], [356, "bbc one uk"],
-        [357, "BBC Two UK"], [358, "BBC Three UK"], [359, "BBC Four UK"], [360, "5 USA"], [361, "Sky Witness HD"],
-        [362, "Sky Atlantic"], [363, "E4 Channel"], [364, "RTE 1"], [365, "RTE 2"], [366, "Sky Sports News UK"],
-        [367, "MTV UK"], [368, "SuperSport Cricket"], [369, "Fox Cricket"], [370, "astro cricket"],
-        [371, "MTV USA"], [372, "bein sports en espa単ol"], [373, "SYFY USA"], [374, "Cinemax USA"],
-        [375, "ESPN Deportes"], [376, "WWE Network"], [377, "MUTV UK"], [378, "Veronica NL Netherland"],
-        [379, "ESPN 1 NL"], [380, "benfica tv pt"], [381, "FX Movie Channel"], [382, "HGTV"],
-        [383, "Ziggo Sport Docu NL"], [384, "The Food Network"], [385, "SEC Network USA"], [386, "ESPN 2 NL"],
-        [387, "ESPN Premium Argentina"], [388, "TNT Sports Argentina"], [389, "Lifetime Movies Network"],
-        [390, "RTL7 Netherland"], [391, "VTV+ Uruguay"], [392, "Win Sports+ Columbia"], [393, "Ziggo Sport Select NL"],
-        [394, "The Weather Channel"], [395, "МАТЧ! БОЕЦ Russia"], [396, "Ziggo Sport Racing NL"],
-        [397, "BIG TEN Network (BTN USA)"], [398, "Ziggo Sport Voetbal NL"], [399, "MLB Network USA"],
-        [400, "Digi Sport 1 Romania"], [401, "Digi Sport 2 Romania"], [402, "Digi Sport 3 Romania"],
-        [403, "Digi Sport 4 Romania"], [404, "NBA TV USA"], [405, "NFL Network"], [406, "Sportsnet Ontario"],
-        [407, "Sportsnet West"], [408, "Sportsnet East"], [409, "Sportsnet 360"], [410, "Sportsnet World"],
-        [411, "Sportsnet One"], [412, "SuperSport Grandstand"], [413, "SuperSport PSL"],
-        [414, "SuperSport Premier league"], [415, "SuperSport LaLiga"], [416, "SuperSport Variety 1"],
-        [417, "SuperSport Variety 2"], [418, "SuperSport Variety 3"], [419, "SuperSport Variety 4"],
-        [420, "SuperSport Action"], [421, "SuperSport Rugby"], [422, "SuperSport Golf"], [423, "SuperSport Tennis"],
-        [424, "SuperSport Motorsport"], [425, "bein sports usa"], [426, "DAZN 1 Bar DE"], [427, "DAZN 2 Bar DE"],
-        [428, "Eleven Sports 3 Poland"], [429, "arena sport 1 serbia"], [430, "arena sport 2 serbia"],
-        [431, "arena sport 3 serbia"], [432, "arena sport 1 croatia"], [433, "arena sport 2 croatia"],
-        [434, "arena sport 3 croatia"], [435, "Movistar Liga de Campeones"], [436, "Movistar Deportes Spain"],
-        [437, "#0 Spain"], [438, "Movistar Deportes 2 Spain"], [439, "Orange Sport 1 Romania"],
-        [440, "Orange Sport 2 Romania"], [441, "Orange Sport 3 Romania"], [442, "Orange Sport 4 Romania"],
-        [443, "Polsat News Poland"], [444, "TVN24 Poland"], [445, "DAZN 1 Spain"], [446, "DAZN 2 Spain"],
-        [447, "DAZN 3 Spain"], [448, "DAZN 4 Spain"], [449, "Sky Sports MIX UK"], [450, "PTV Sports"],
-        [451, "Viaplay Sports 1 UK"], [452, "TVP INFO"], [453, "Sport Klub HD Serbia"], [454, "Sport TV3 Portugal"],
-        [455, "Eleven Sports 1 Portugal"], [456, "Eleven Sports 2 Portugal"], [457, "Eleven Sports 3 Portugal"],
-        [458, "Eleven Sports 4 Portugal"], [459, "Eleven Sports 5 Portugal"], [460, "Sky Sport Football Italy"],
-        [461, "Sky Sport UNO Italy"], [462, "Sky Sport Arena Italy"], [463, "Canal+ Foot France"],
-        [464, "Canal+ Sport360"], [465, "Diema Sport Bulgaria"], [466, "Diema Sport 2 Bulgaria"],
-        [467, "Diema Sport 3 Bulgaria"], [468, "Nova Sport Bulgaria"], [469, "Eurosport 1 Bulgaria"],
-        [470, "Eurosport 2 Bulgaria"], [471, "Ring Bulgaria"], [472, "Max Sport 1 Bulgaria"],
-        [473, "Max Sport 2 Bulgaria"], [474, "Max Sport 3 Bulgaria"], [475, "Max Sport 4 Bulgaria"],
-        [476, "bnt 1 bulgaria"], [477, "bnt 2 bulgaria"], [478, "bnt 3 bulgaria"], [479, "btv bulgaria"],
-        [480, "Nova TV Bulgaria"], [481, "btv action bulgaria"], [482, "Diema Bulgaria"], [483, "FOX HD Bulgaria"],
-        [484, "btv lady bulgaria"], [485, "Diema Family Bulgaria"], [486, "Canal+ Sport 1 Afrique"],
-        [487, "Canal+ Sport 2 Afrique"], [488, "Canal+ Sport 3 Afrique"], [489, "Canal+ Sport 4 Afrique"],
-        [490, "Canal+ Sport 5 Afrique"], [491, "bein sports australia 1"], [492, "bein sports australia 2"],
-        [493, "bein sports australia 3"], [494, "bein sports max 4 france"], [495, "bein sports max 5 france"],
-        [496, "bein sports max 6 france"], [497, "bein sports max 7 france"], [498, "bein sports max 8 france"],
-        [499, "bein sports max 9 france"], [500, "bein sports max 10 france"],
-        [501, "18+ (player-01)"], [502, "18+ (player-02)"], [503, "18+ (player-03)"],
-        [504, "18+ (player-04)"], [505, "18+ (player-05)"], [506, "18+ (player-06)"],
-        [507, "18+ (player-07)"], [508, "18+ (player-08)"], [509, "18+ (player-09)"],
-        [510, "18+ (player-10)"], [511, "18+ (player-11)"], [512, "18+ (player-12)"],
-        [513, "18+ (player-13)"], [514, "18+ (player-14)"], [515, "18+ (player-15)"],
-        [516, "18+ (player-16)"], [517, "18+ (player-17)"], [518, "18+ (player-18)"],
-        [519, "18+ (player-19)"], [520, "18+ (player-20)"], [521, "#vamos spain"],
-        [522, "barca tv spain"], [523, "Real Madrid TV Spain"], [524, "Eurosport 1 Spain"],
-        [525, "Eurosport 2 Spain"], [526, "Movistar Deportes 3 Spain"],
-        [527, "Movistar Deportes 4 Spain"], [528, "Movistar Golf Spain"],
-        [529, "Teledeporte Spain (TDP)"], [530, "Gol Play Spain"], [531, "antena 3 spain"],
-        [532, "Telecinco Spain"], [533, "TVE La 1 Spain"], [534, "La Sexta Spain"],
-        [535, "Cuatro Spain"], [536, "TVE La 2 Spain"], [537, "DAZN F1 ES"],
-        [538, "DAZN LaLiga"], [539, "LaLiga SmartBank TV"], [540, "Canal 11 Portugal"],
-        [541, "One 1 HD Israel"], [542, "One 2 HD Israel"], [543, "Yes Movies Action Israel"],
-        [544, "Yes Movies Kids Israel"], [545, "Yes Movies Comedy Israel"],
-        [546, "Channel 9 Israel"], [547, "Channel 10 Israel"], [548, "Channel 11 Israel"],
-        [549, "Channel 12 Israel"], [551, "Channel 13 Israel"], [552, "Channel 14 Israel"],
-        [553, "Hot3 Israel"], [554, "Sky Sports Racing UK"], [555, "Racing TV UK"],
-        [556, "Sky Sport Top Event DE"], [557, "Sky Sport Mix DE"],
-        [558, "Sky Sport Bundesliga 1 HD"], [559, "Sky Sport Austria 1 HD"],
-        [560, "TVP1 Poland"], [561, "TVP2 Poland"], [562, "Polsat Poland"],
-        [563, "Motowizja Poland"], [564, "Polsat Film Poland"], [565, "TVN HD Poland"],
-        [566, "Canal+ Premium Poland"], [567, "Canal+ Family Poland"],
-        [568, "Filmbox Premium Poland"], [569, "HBO Poland"], [570, "Canal+ Seriale Poland"],
-        [571, "Sportdigital Fussball"], [572, "SuperSport Maximo 1"],
-        [573, "Match Premier Russia"], [574, "Sky Sports Golf Italy"],
-        [575, "Sky Sport MotoGP Italy"], [576, "Sky Sport Tennis Italy"],
-        [577, "Sky Sport F1 Italy"], [578, "bein sports hd qatar"],
-        [579, "arena sport 1 bih"], [580, "arena sport 4 croatia"],
-        [581, "arena sport 4 serbia"], [582, "Nova Sport Serbia"], [583, "Prima Sport 1"],
-        [584, "Prima Sport 2"], [585, "Prima Sport 3"], [586, "Prima Sport 4"],
-        [587, "Sky Sport Select NZ"], [588, "Sky Sport 1 NZ"], [589, "Sky Sport 2 NZ"],
-        [590, "Sky Sport 3 NZ"], [591, "Sky Sport 4 NZ"], [592, "Sky Sport 5 NZ"],
-        [593, "Sky Sport 6 NZ"], [594, "Sky Sport 7 NZ"], [595, "Sky Sport 8 NZ"],
-        [596, "Sky Sport 9 NZ"], [597, "beIN Sports Max AR"], [598, "Willow 2 Cricket"],
-        [599, "Nova Sports Premier League Greece"], [600, "abu dhabi sports 1 uae"],
-        [601, "abu dhabi sports 2 uae"], [602, "CTV Canada"], [603, "Smithsonian Channel"],
-        [604, "Dubai Sports 1 UAE"], [605, "Dubai Sports 2 UAE"], [606, "Dubai Sports 3 UAE"],
-        [607, "Rally TV"], [608, "Dubai Racing 2 UAE"],
-        [609, "abu dhabi sports 1 premium"], [610, "abu dhabi sports 2 premium"],
-        [611, "OnTime Sports"], [612, "arena sports tenis serbia"], [613, "Newsmax USA"],
-        [614, "SSC Sport 1"], [615, "SSC Sport 2"], [616, "SSC Sport 3"],
-        [617, "SSC Sport 4"], [618, "SSC Sport 5"], [619, "SSC Sport Extra 1"],
-        [620, "SSC Sport Extra 2"], [621, "SSC Sport Extra 3"],
-        [622, "Cosmote Sport 1 HD"], [623, "Cosmote Sport 2 HD"],
-        [624, "Cosmote Sport 3 HD"], [625, "Cosmote Sport 4 HD"],
-        [626, "Cosmote Sport 5 HD"], [627, "Cosmote Sport 6 HD"],
-        [628, "Cosmote Sport 7 HD"], [629, "Cosmote Sport 8 HD"],
-        [630, "Cosmote Sport 9 HD"], [631, "Nova Sports 1 Greece"],
-        [632, "Nova Sports 2 Greece"], [633, "Nova Sports 3 Greece"],
-        [634, "Nova Sports 4 Greece"], [635, "Nova Sports 5 Greece"],
-        [636, "Nova Sports 6 Greece"], [637, "Nova Sports Start Greece"],
-        [638, "Nova Sports Prime Greece"], [639, "Nova Sports News Greece"],
-        [640, "Sportdigital1+ Germany"], [641, "Sport1 Germany"],
-        [642, "TNT Sports HD Chile"], [643, "Fox Deportes USA"], [644, "TCM USA"],
-        [645, "L'Equipe France"], [646, "Racer TV USA"], [647, "CMT USA"],
-        [648, "boomerang"], [649, "Nicktoons"], [650, "TeenNick"],
-        [651, "Destination America"], [652, "Disney Jr"], [653, "Pop TV USA"],
-        [654, "My9TV USA"], [655, "WeTV USA"], [656, "IFC TV USA"],
-        [657, "Discovery Family"], [658, "Sundance TV"], [659, "Vice TV"],
-        [660, "TV One USA"], [661, "Discovery Turbo"], [662, "MeTV USA"],
-        [663, "NHL Network USA"], [664, "acc network usa"], [665, "FYI"],
-        [666, "Nick Music"], [667, "NFL RedZone"], [668, "Universal Kids USA"],
-        [669, "Crime+ Investigation USA"], [670, "S4C UK"],
-        [671, "Sky Cinema Premiere UK"], [672, "Sky Cinema Select UK"],
-        [673, "Sky Cinema Hits UK"], [674, "Sky Cinema Greats UK"],
-        [675, "Sky Cinema Animation UK"], [676, "Sky Cinema Family UK"],
-        [677, "Sky Cinema Action UK"], [678, "Sky Cinema Comedy UK"],
-        [679, "Sky Cinema Thriller UK"], [680, "Sky Cinema Drama UK"],
-        [681, "Sky Cinema Sci-Fi Horror UK"], [682, "Sky Showcase UK"],
-        [683, "Sky Arts UK"], [684, "Sky Comedy UK"], [685, "Sky Crime"],
-        [686, "Sky History"], [687, "Gold UK"], [688, "Film4 UK"], [689, "HBO2 USA"],
-        [690, "HBO Comedy USA"], [691, "HBO Family USA"], [692, "HBO Latino USA"],
-        [693, "HBO Signature USA"], [694, "HBO Zone USA"],
-        [695, "Showtime ShoXbet USA"], [696, "Comet USA"], [697, "Cooking Channel USA"],
-        [698, "TMC Channel USA"], [699, "Great American Family Channel (GAC)"],
-        [700, "TV4 Hockey"], [701, "TV4 Tennis"], [702, "TV4 Motor"],
-        [703, "TV4 Sport Live 1"], [704, "TV4 Sport Live 2"], [705, "TV4 Sport Live 3"],
-        [706, "TV4 Sport Live 4"], [707, "TV4 Sportkanalen"], [708, "Sky Max UK"],
-        [709, "Sport Klub Golf Croatia"], [710, "Tennis+ 10"], [711, "Tennis+ 12"],
-        [712, "beIN Sports 1 Malaysia"], [713, "beIN Sports 2 Malaysia"],
-        [714, "beIN Sports 3 Malaysia"], [715, "Cleo TV"], [716, "Sporting TV Portugal"],
-        [717, "axn movies portugal"], [718, "Porto Canal Portugal"], [719, "RTP 1 Portugal"],
-        [720, "RTP 2 Portugal"], [721, "RTP 3 Portugal"], [722, "SIC Portugal"],
-        [723, "TVI Portugal"], [724, "TVI Reality Portugal"], [725, "arte de"],
-        [726, "3sat DE"], [727, "ZDF DE"], [728, "ZDF Info DE"], [729, "Sat.1 DE"],
-        [730, "ProSieben (Pro7) DE"], [731, "Kabel Eins (Kabel 1) DE"], [732, "Sixx DE"],
-        [733, "MDR DE"], [734, "WDR DE"], [735, "SWR DE"], [736, "NDR DE"],
-        [737, "br fernsehen de"], [738, "Super RTL DE"], [739, "SR Fernsehen DE"],
-        [740, "RTL DE"], [741, "Ten Sports PK"], [742, "axs tv usa"],
-        [743, "Galavisión USA"], [744, "Fashion TV"], [745, "Nat Geo Wild USA"],
-        [746, "TyC Sports Argentina"], [747, "TV4 Football Sweden"], [748, "Cozi TV USA"],
-        [749, "MundoToro TV Spain"], [750, "C Span 1"],
-        [751, "FETV - Family Entertainment Television"], [752, "Grit Channel"],
-        [753, "NBC Sports Bay Area"], [754, "NBC Sports Boston"],
-        [755, "NBC Sports California"], [756, "Fox Soccer Plus"], [757, "Fight Network"],
-        [758, "fox sports 2 usa"], [759, "Sportsnet New York (SNY)"], [760, "Globo SP"],
-        [761, "Globo Rio"], [762, "NESN USA"], [763, "YES Network USA"],
-        [764, "Spectrum SportsNet LA"], [765, "MSG USA"], [766, "abc ny usa"],
-        [767, "CBSNY USA"], [768, "FoxNY USA"], [769, "NBCNY USA"],
-        [770, "Marquee Sports Network"], [771, "Premier Sports Ireland 1"],
-        [772, "Eurosport 1 France"], [773, "Eurosport 2 France"], [774, "ERT 1 Greece"],
-        [775, "Fox Weather Channel"], [776, "Chicago Sports Network"],
-        [777, "NBC Sports Philadelphia"], [778, "Monumental Sports Network"],
-        [779, "Max Sport 1 Croatia"], [780, "Max Sport 2 Croatia"], [781, "alkass one"],
-        [782, "alkass two"], [783, "alkass three"], [784, "alkass four"],
-        [785, "Sky Sports Golf DE"], [786, "DStv Mzansi Magic"],
-        [787, "Fox Sports Argentina"], [788, "Fox Sports 2 Argentina"],
-        [789, "Fox Sports 3 Argentina"], [790, "CMTV Portugal"],
-        [791, "MGM+ USA / Epix"], [792, "Showtime 2 USA (SHO2) USA"],
-        [793, "Showtime Showcase USA"], [794, "Showtime Extreme USA"],
-        [795, "Showtime Family Zone (SHO Family Zone) USA"],
-        [796, "Showtime Next (SHO Next) USA"], [797, "Showtime Women USA"],
-        [798, "ESPN3 Argentina"], [799, "Premier Sports Ireland 2"], [800, "6'eren Denmark"],
-        [801, "DR1 Denmark"], [802, "DR2 Denmark"], [803, "Kanal 4 Denmark"],
-        [804, "Kanal 5 Denmark"], [805, "Canal 9 Denmark"], [806, "MTV Denmark"],
-        [807, "TV2 Bornholm Denmark"], [808, "TV2 Sport X Denmark"],
-        [809, "TV3 Sport Denmark"], [810, "TV2 Sport Denmark"], [811, "See Denmark"],
-        [812, "C More First Sweden"], [813, "C More Hits Sweden"],
-        [814, "C More Series Sweden"], [815, "V Film Premiere"], [816, "V Film Family"],
-        [817, "TV2 Denmark"], [818, "TV2 Zulu"], [819, "TV3+ Denmark"],
-        [820, "Fox Sports 502 AU"], [821, "Fox Sports 503 AU"], [822, "Fox Sports 504 AU"],
-        [823, "Fox Sports 505 AU"], [824, "Fox Sports 506 AU"], [825, "Fox Sports 507 AU"],
-        [826, "Liverpool TV (LFC TV)"], [827, "DStv M-Net"], [828, "DStv KykNet & Kie"],
-        [829, "MASN USA"], [830, "Fox Sports Premium MX"], [831, "Citytv"], [832, "CBC CA"],
-        [833, "TVA Sports"], [834, "TVA Sports 2"], [835, "Noovo CA"], [836, "Global CA"],
-        [837, "YES TV CA"], [838, "CTV 2 Canada"], [839, "RDS CA"], [840, "RDS 2 CA"],
-        [841, "RDS Info CA"], [842, "TVO CA"], [843, "Prima TV RO"], [844, "azteca 7 mx"],
-        [845, "NBC Universo"], [846, "Happy TV Serbia"], [847, "Nova S Serbia"],
-        [848, "Outdoor Channel USA"], [849, "Logo TV USA"],[850, "Rai 1 Italy"],
-        [851, "Rai 2 Italy"], [852, "Rai 3 Italy"], [853, "Rai 4 Italy"],
-        [854, "italia 1 italy"], [855, "la7 italy"], [856, "LA7d HD+ Italy"],
-        [857, "20 Mediaset Italy"], [858, "Rai Premium Italy"], [859, "Sky Cinema Collection Italy"],
-        [860, "Sky Cinema Uno Italy"], [861, "Sky Cinema Action Italy"], [862, "Sky Cinema Comedy Italy"],
-        [863, "Sky Cinema Uno +24 Italy"], [864, "Sky Cinema Romance Italy"], [865, "Sky Cinema Family Italy"],
-        [866, "CW Philly"], [867, "Sky Cinema Drama Italy"], [868, "Sky Cinema Suspense Italy"],
-        [869, "Sky Sport 24 Italy"], [870, "Sky Sport Calcio Italy"], [871, "Sky Calcio 1 (251) Italy"],
-        [872, "Sky Calcio 2 (252) Italy"], [873, "Sky Calcio 3 (253) Italy"], [874, "Sky Calcio 4 (254) Italy"],
-        [875, "Sky Sport Basket Italy"], [876, "ITV Quiz"], [877, "DAZN Zona Italy"],
-        [878, "EuroSport 1 Italy"], [879, "EuroSport 2 Italy"], [880, "Sky Serie Italy"],
-        [881, "Sky Uno Italy"], [882, "Rai Sport Italy"], [883, "SBS6 NL"], [884, "Sky Sports Tennis DE"],
-        [885, "Sony Ten 1"], [886, "Sony Ten 2"], [887, "Sony Ten 3"], [888, "ESPN 3 NL"],
-        [889, "TRT Spor TR"], [890, "Bally Sports Arizona"], [891, "FanDuel Sports Network Detroit"],
-        [892, "FanDuel Sports Network Florida"], [893, "FanDuel Sports Network Great Lakes"],
-        [894, "FanDuel Sports Network Indiana"], [895, "FanDuel Sports Network Kansas City"],
-        [896, "FanDuel Sports Network Midwest"], [897, "FanDuel Sports Network New Orleans"],
-        [898, "FanDuel Sports Network North"], [899, "FanDuel Sports Network Ohio"],
-        [900, "FanDuel Sports Network Oklahoma"], [901, "Ziggo Sport 6 NL"],
-        [902, "FanDuel Sports Network SoCal"], [903, "FanDuel Sports Network South"],
-        [904, "FanDuel Sports Network Southeast"], [905, "FanDuel Sports Network Sun"],
-        [906, "FanDuel Sports Network West"], [907, "FanDuel Sports Network Wisconsin"],
-        [908, "FanDuel Sports Network Arizona"], [910, "cbs sports golazo"], [911, "CytaVision Sports 1 Cyprus"],
-        [912, "CytaVision Sports 2 Cyprus"], [913, "CytaVision Sports 3 Cyprus"],
-        [914, "CytaVision Sports 4 Cyprus"], [915, "CytaVision Sports 5 Cyprus"],
-        [916, "CytaVision Sports 6 Cyprus"], [917, "CytaVision Sports 7 Cyprus"],
-        [918, "DAZN Portugal FIFA Mundial de Clubes"], [919, "Ziggo Sport 3 NL"], [920, "root sports northwest"],
-        [921, "Space City Home Network"], [922, "Sportsnet Pittsburgh"], [923, "altitude sports"],
-        [924, "Las Estrellas"], [925, "ESPN 1 MX"], [926, "ESPN 2 MX"], [927, "ESPN 3 MX"],
-        [928, "ESPN 4 MX"], [929, "Fox Sports 1 MX"], [930, "Fox Sports 2 MX"], [931, "Fox Sports 3 MX"],
-        [932, "TVC Deportes MX"], [933, "Claro Sports MX"], [934, "azteca uno mx"], [935, "TUDN MX"],
-        [936, "Canal5 MX"], [940, "arena sport 5 serbia"], [941, "arena sport 6 serbia"],
-        [942, "arena sport 7 serbia"], [943, "arena sport 8 serbia"], [944, "arena sport 9 serbia"],
-        [945, "arena sport 10 serbia"], [946, "Sky Sport Bundesliga 2"], [947, "Sky Sport Bundesliga 3"],
-        [948, "Sky Sport Bundesliga 4"], [949, "Sky Sport Bundesliga 5"], [950, "France 2"],
-        [951, "France 3"], [952, "France 4"], [953, "France 5"], [954, "RMC Story France"],
-        [955, "TMC France"], [956, "C8 France"], [957, "BFM TV France"], [958, "arte france"],
-        [959, "W9 France"], [960, "DAZN Ligue 1 France"], [961, "automoto la chaîne"],
-        [962, "LCI France"], [963, "6ter France"], [964, "CNews France"], [965, "Sport en France"],
-        [970, "Starz Cinema"], [971, "Starz Comedy"], [972, "Starz Edge"], [973, "Starz In Black"],
-        [974, "Starz Kids & Family"], [975, "Starz Encore"], [976, "Starz Encore Action"],
-        [977, "Starz Encore Black"], [978, "Starz Encore Classic"], [979, "Starz Encore Family"],
-        [980, "Starz Encore Suspense"], [981, "Starz Encore Westerns"], [982, "Spectrum SportsNet USA"],
-        [983, "Canal+ Extra 1 Poland"], [984, "Canal+ Extra 2 Poland"], [985, "Canal+ Extra 3 Poland"],
-        [986, "Canal+ Extra 4 Poland"], [987, "Canal+ Extra 5 Poland"], [988, "Canal+ Extra 6 Poland"],
-        [989, "Canal+ Extra 7 Poland"], [990, "MTV Poland"], [991, "Polsat Sport Premium 1 Super HD PL"],
-        [992, "Polsat Sport Premium 2 Super HD PL"], [993, "Polsat Sport Extra 1 HD Poland"],
-        [994, "Polsat Sport Extra 2 HD Poland"], [995, "Polsat Sport Extra 3 HD Poland"],
-        [996, "Polsat Sport Extra 4 HD Poland"], [997, "Polsat Sport Fight HD Poland"],
-        [998, "Polsat Sport News HD Poland"], [999, "Eleven Sports 4 Poland"], [1000, "atv turkey"],
-        [1001, "Kanal D Turkey"], [1002, "Show TV Turkey"], [1003, "Now TV Turkey"],
-        [1004, "Star TV Turkey"], [1005, "TV8 Turkey"], [1010, "beIN Sports 5 Turkey"],
-        [1011, "a spor turkey"], [1020, "Canal+ Sport CZ"], [1021, "Nova Sport 1 CZ"],
-        [1022, "Nova Sport 2 CZ"], [1023, "Nova Sport 3 CZ"], [1024, "Nova Sport 4 CZ"],
-        [1025, "Nova Sport 5 CZ"], [1026, "Nova Sport 6 CZ"], [1027, "OnePlay Sport 1 CZ"],
-        [1028, "OnePlay Sport 2 CZ"], [1029, "OnePlay Sport 3 CZ"], [1030, "Premier Sport 1 CZ"],
-        [1031, "Premier Sport 2 CZ"], [1032, "Premier Sport 3 CZ"], [1033, "CT Sport CZ"],
-        [1034, "Nova HD CZ"], [1035, "CT1 HD CZ"], [1036, "CT2 HD CZ"], [1037, "TN Live CZ"],
-        [1038, "OnePlay Sport 4 CZ"], [1039, "OnePlay MD2 CZ"], [1040, "OnePlay MD3 CZ"],
-        [1041, "OnePlay MD4 CZ"], [1042, "Sport 1 CZ"], [1043, "Canal+ Sport 2 CZ"],
-        [1044, "Canal+ Sport 3 CZ"], [1045, "Canal+ Sport 4 CZ"], [1046, "Canal+ Sport 5 CZ"],
-        [1047, "Canal+ Sport 6 CZ"], [1048, "Canal+ Sport 7 CZ"], [1049, "Canal+ Sport 8 CZ"],
-        [1050, "JOJ SK"], [1051, "Dajto SK"], [1052, "JOJ Šport SK"], [1053, "Voyo Special 1 SK"],
-        [1054, "Voyo Special 2 SK"], [1055, "Voyo Special 3 SK"], [1056, "Voyo Special 4 SK"],
-        [1057, "Voyo Special 7 SK"], [1058, "Voyo Special 8 SK"], [1059, "Voyo Special 9 SK"],
-        [1060, "Nova Sport 3 SK"], [1061, "Nova Sport 4 SK"], [1062, "Nova Sport 5 SK"],
-        [1063, "Canal+ Sport SK"], [1064, "Canal+ Sport 2 SK"], [1065, "Canal+ Sport 3 SK"],
-        [1066, "Canal+ Sport 4 SK"]
-        // ✅ Full list auto-generated with 900+ channels - URLs use dlstreams.top format
-      ];
+<button id="exitBtn">✕ Exit to Menu</button>
+<div id="currentStream"></div>
 
+<!-- 🔥 Player Switch -->
+<div id="playerSwitch"></div>
 
-    // DOM elements
-    const launcher = document.getElementById('launcher');
-    const player = document.getElementById('player');
-    const streamFrame = document.getElementById('streamFrame');
-    const exitBtn = document.getElementById('exitBtn');
-    const currentStream = document.getElementById('currentStream');
-    const channelGrid = document.getElementById('channelGrid');
-    const searchBox = document.getElementById('searchBox');
-    const stats = document.getElementById('stats');
+<script>
+    // 📋 Channel data: [id, name]
+    const channels = [
+    [31, "TNT Sports 1 UK"], [32, "TNT Sports 2 UK"], [33, "TNT Sports 3 UK"], [34, "TNT Sports 4 UK"],
+    [35, "Sky Sports Football UK"], [36, "Sky Sports+ Plus"], [37, "Sky Sports Action UK"], [38, "Sky Sports Main Event"],
+    [39, "Fox Sports 1 USA"], [40, "Tennis Channel"], [41, "EuroSport 1 UK"], [42, "EuroSport 2 UK"],
+    [43, "DAZN LaLiga 2"], [44, "ESPN USA"], [45, "ESPN2 USA"], [46, "beIN Sports MENA English 3"],
+    [47, "Polsat Sport Poland"], [48, "Canal+ Sport Poland"], [49, "Sport TV1 Portugal"], [50, "Polsat Sport Extra Poland"],
+    [51, "abc usa"], [52, "CBS USA"], [53, "NBC USA"], [54, "FOX USA"], [56, "Supersport Football"],
+    [57, "EuroSport 1 Poland"], [58, "EuroSport 2 Poland"], [60, "Sky Sports F1 UK"], [61, "bein sports mena english 1"],
+    [62, "bein sports 1 turkey"], [63, "bein sports 2 turkey"], [64, "bein sports 3 turkey"], [65, "Sky Sports Cricket"],
+    [66, "TUDN USA"], [67, "bein sports 4 turkey"], [70, "Sky Sports Golf UK"], [71, "Eleven Sports 1 Poland"],
+    [72, "Eleven Sports 2 Poland"], [73, "Canal+ Sport 2 Poland"], [74, "Sport TV2 Portugal"], [75, "CANAL+ SPORT 5 Poland"],
+    [78, "SporTV Brasil"], [79, "SporTV2 Brasil"], [80, "SporTV3 Brasil"], [81, "ESPN Brasil"], [82, "ESPN2 Brasil"],
+    [83, "ESPN3 Brasil"], [84, "Movistar Laliga"], [85, "ESPN4 Brasil"], [87, "TNT Brasil"], [88, "Premier Brasil"],
+    [89, "Combate Brasil"], [90, "bein sports mena english 2"], [91, "bein sports 1 arabic"], [92, "bein sports 2 arabic"],
+    [93, "bein sports 3 arabic"], [94, "bein sports 4 arabic"], [95, "bein sports 5 arabic"], [96, "bein sports 6 arabic"],
+    [97, "bein sports 7 arabic"], [98, "bein sports 8 arabic"], [99, "bein sports 9 arabic"],
+    [100, "bein sports xtra 1"], [101, "Sport Klub 1 Serbia"], [102, "Sport Klub 2 Serbia"],
+    [103, "Sport Klub 3 Serbia"], [104, "Sport Klub 4 Serbia"], [111, "TSN1"], [112, "TSN2"], [113, "TSN3"],
+    [114, "TSN4"], [115, "TSN5"], [116, "bein sports 1 france"], [117, "bein sports 2 france"],
+    [118, "bein sports 3 france"], [119, "RMC Sport 1 France"], [120, "RMC Sport 2 France"], [121, "Canal+ France"],
+    [122, "Canal+ Sport France"], [123, "astro supersport 1"], [124, "astro supersport 2"], [125, "astro supersport 3"],
+    [126, "astro supersport 4"], [127, "Match TV Russia"], [128, "TVP Sport Poland"], [129, "Polsat Sport News Poland"],
+    [130, "Sky sports Premier League"], [131, "Telemundo"], [132, "Univision"], [133, "Unimas"],
+    [134, "arena sport 1 premium"], [135, "arena sport 2 premium"], [136, "Match Football 1 Russia"],
+    [137, "Match Football 2 Russia"], [138, "Match Football 3 Russia"], [139, "arena sport 3 premium"],
+    [140, "Sport 1 Israel"], [141, "Sport 2 Israel"], [142, "Sport 3 Israel"], [143, "Sport 4 Israel"],
+    [144, "Sport 5 Israel"], [145, "Sport 5 PLUS Israel"], [146, "Sport 5 Live Israel"], [147, "Sport 5 Star Israel"],
+    [148, "Sport 5 Gold Israel"], [149, "ESPN SUR"], [150, "ESPN2 SUR"], [206, "ahc (american heroes channel)"],
+    [207, "PPV Event"], [208, "Floracing"], [209, "PPV Event"],[210, "PBS USA USA"],
+    [222, "DAZN PPV"], [223, "TV3 Max Denmark"], [230, "DAZN 1 UK"], [259, "Canal+ Sport 3 Poland"],
+    [260, "Vodafone Sport"], [267, "Star Sports 1 IN"], [268, "Star Sports Hindi IN"], [269, "a sport pk"],
+    [270, "T Sports BD"], [271, "CANAL+ MotoGP France"], [272, "V Sport Motor Sweden"], [273, "Canal+ Formula 1"],
+    [274, "Sky Sports F1 DE"], [275, "Bandsports Brasil"], [276, "LaLigaTV UK"], [277, "NBC10 Philadelphia"],
+    [278, "Law & Crime Network"], [279, "FUSE TV USA"], [280, "CW PIX 11 USA"], [281, "Court TV USA"],
+    [282, "StarzPlay CricLife 3 HD"], [283, "antenna tv usa"], [284, "StarzPlay CricLife 1 HD"],
+    [285, "Discovery Velocity CA"], [287, "Pac-12 Network USA"], [288, "ESPNews"], [289, "Sport TV4 Portugal"],
+    [290, "Sport TV5 Portugal"], [291, "Sport TV6 Portugal"], [292, "Gol Mundial 1"], [293, "Reelz Channel"],
+    [294, "Science Channel"], [295, "adult swim"], [296, "Hallmark Movies & Mysterie"], [297, "Fox Business"],
+    [298, "FXX USA"], [299, "Magnolia Network"], [300, "CW USA"], [301, "Freeform"], [302, "a&e usa"],
+    [303, "amc usa"], [304, "animal planet"], [305, "bbc america (bbca)"], [306, "bet usa"], [307, "bravo usa"],
+    [308, "CBS Sports Network (CBSSN)"], [309, "CNBC USA"], [310, "Comedy Central"], [311, "Discovery Life Channel"],
+    [312, "Disney Channel"], [313, "Discovery Channel"], [314, "Disney XD"], [315, "E! Entertainment Television"],
+    [316, "ESPNU USA"], [317, "FX USA"], [318, "GOLF Channel USA"], [319, "Game Show Network"],
+    [320, "The Hallmark Channel"], [321, "HBO USA"], [322, "History USA"], [323, "Headline News"],
+    [324, "Investigation Discovery (ID USA)"], [325, "ION USA"], [326, "Lifetime Network"], [327, "MSNBC"],
+    [328, "National Geographic (NGC)"], [329, "NICK JR"], [330, "NICK"], [331, "Oprah Winfrey Network (OWN)"],
+    [332, "Oxygen True Crime"], [333, "Showtime USA"], [334, "Paramount Network"], [335, "Starz"], [336, "TBS USA"],
+    [337, "TLC"], [338, "TNT USA"], [339, "Cartoon Network"], [340, "Travel Channel"], [341, "TruTV USA"],
+    [342, "TVLAND"], [343, "USA Network"], [344, "VH1 USA"], [345, "CNN USA"], [346, "Willow Cricket"],
+    [347, "Fox News"], [348, "Dave"], [349, "bbc news channel hd"], [350, "ITV 1 UK"], [351, "ITV 2 UK"],
+    [352, "ITV 3 UK"], [353, "ITV 4 UK"], [354, "Channel 4 UK"], [355, "Channel 5 UK"], [356, "bbc one uk"],
+    [357, "BBC Two UK"], [358, "BBC Three UK"], [359, "BBC Four UK"], [360, "5 USA"], [361, "Sky Witness HD"],
+    [362, "Sky Atlantic"], [363, "E4 Channel"], [364, "RTE 1"], [365, "RTE 2"], [366, "Sky Sports News UK"],
+    [367, "MTV UK"], [368, "SuperSport Cricket"], [369, "Fox Cricket"], [370, "astro cricket"],
+    [371, "MTV USA"], [372, "bein sports en espa単ol"], [373, "SYFY USA"], [374, "Cinemax USA"],
+    [375, "ESPN Deportes"], [376, "WWE Network"], [377, "MUTV UK"], [378, "Veronica NL Netherland"],
+    [379, "ESPN 1 NL"], [380, "benfica tv pt"], [381, "FX Movie Channel"], [382, "HGTV"],
+    [383, "Ziggo Sport Docu NL"], [384, "The Food Network"], [385, "SEC Network USA"], [386, "ESPN 2 NL"],
+    [387, "ESPN Premium Argentina"], [388, "TNT Sports Argentina"], [389, "Lifetime Movies Network"],
+    [390, "RTL7 Netherland"], [391, "VTV+ Uruguay"], [392, "Win Sports+ Columbia"], [393, "Ziggo Sport Select NL"],
+    [394, "The Weather Channel"], [395, "МАТЧ! БОЕЦ Russia"], [396, "Ziggo Sport Racing NL"],
+    [397, "BIG TEN Network (BTN USA)"], [398, "Ziggo Sport Voetbal NL"], [399, "MLB Network USA"],
+    [400, "Digi Sport 1 Romania"], [401, "Digi Sport 2 Romania"], [402, "Digi Sport 3 Romania"],
+    [403, "Digi Sport 4 Romania"], [404, "NBA TV USA"], [405, "NFL Network"], [406, "Sportsnet Ontario"],
+    [407, "Sportsnet West"], [408, "Sportsnet East"], [409, "Sportsnet 360"], [410, "Sportsnet World"],
+    [411, "Sportsnet One"], [412, "SuperSport Grandstand"], [413, "SuperSport PSL"],
+    [414, "SuperSport Premier league"], [415, "SuperSport LaLiga"], [416, "SuperSport Variety 1"],
+    [417, "SuperSport Variety 2"], [418, "SuperSport Variety 3"], [419, "SuperSport Variety 4"],
+    [420, "SuperSport Action"], [421, "SuperSport Rugby"], [422, "SuperSport Golf"], [423, "SuperSport Tennis"],
+    [424, "SuperSport Motorsport"], [425, "bein sports usa"], [426, "DAZN 1 Bar DE"], [427, "DAZN 2 Bar DE"],
+    [428, "Eleven Sports 3 Poland"], [429, "arena sport 1 serbia"], [430, "arena sport 2 serbia"],
+    [431, "arena sport 3 serbia"], [432, "arena sport 1 croatia"], [433, "arena sport 2 croatia"],
+    [434, "arena sport 3 croatia"], [435, "Movistar Liga de Campeones"], [436, "Movistar Deportes Spain"],
+    [437, "#0 Spain"], [438, "Movistar Deportes 2 Spain"], [439, "Orange Sport 1 Romania"],
+    [440, "Orange Sport 2 Romania"], [441, "Orange Sport 3 Romania"], [442, "Orange Sport 4 Romania"],
+    [443, "Polsat News Poland"], [444, "TVN24 Poland"], [445, "DAZN 1 Spain"], [446, "DAZN 2 Spain"],
+    [447, "DAZN 3 Spain"], [448, "DAZN 4 Spain"], [449, "Sky Sports MIX UK"], [450, "PTV Sports"],
+    [451, "Viaplay Sports 1 UK"], [452, "TVP INFO"], [453, "Sport Klub HD Serbia"], [454, "Sport TV3 Portugal"],
+    [455, "Eleven Sports 1 Portugal"], [456, "Eleven Sports 2 Portugal"], [457, "Eleven Sports 3 Portugal"],
+    [458, "Eleven Sports 4 Portugal"], [459, "Eleven Sports 5 Portugal"], [460, "Sky Sport Football Italy"],
+    [461, "Sky Sport UNO Italy"], [462, "Sky Sport Arena Italy"], [463, "Canal+ Foot France"],
+    [464, "Canal+ Sport360"], [465, "Diema Sport Bulgaria"], [466, "Diema Sport 2 Bulgaria"],
+    [467, "Diema Sport 3 Bulgaria"], [468, "Nova Sport Bulgaria"], [469, "Eurosport 1 Bulgaria"],
+    [470, "Eurosport 2 Bulgaria"], [471, "Ring Bulgaria"], [472, "Max Sport 1 Bulgaria"],
+    [473, "Max Sport 2 Bulgaria"], [474, "Max Sport 3 Bulgaria"], [475, "Max Sport 4 Bulgaria"],
+    [476, "bnt 1 bulgaria"], [477, "bnt 2 bulgaria"], [478, "bnt 3 bulgaria"], [479, "btv bulgaria"],
+    [480, "Nova TV Bulgaria"], [481, "btv action bulgaria"], [482, "Diema Bulgaria"], [483, "FOX HD Bulgaria"],
+    [484, "btv lady bulgaria"], [485, "Diema Family Bulgaria"], [486, "Canal+ Sport 1 Afrique"],
+    [487, "Canal+ Sport 2 Afrique"], [488, "Canal+ Sport 3 Afrique"], [489, "Canal+ Sport 4 Afrique"],
+    [490, "Canal+ Sport 5 Afrique"], [491, "bein sports australia 1"], [492, "bein sports australia 2"],
+    [493, "bein sports australia 3"], [494, "bein sports max 4 france"], [495, "bein sports max 5 france"],
+    [496, "bein sports max 6 france"], [497, "bein sports max 7 france"], [498, "bein sports max 8 france"],
+    [499, "bein sports max 9 france"], [500, "bein sports max 10 france"],
+    [501, "18+ (player-01)"], [502, "18+ (player-02)"], [503, "18+ (player-03)"],
+    [504, "18+ (player-04)"], [505, "18+ (player-05)"], [506, "18+ (player-06)"],
+    [507, "18+ (player-07)"], [508, "18+ (player-08)"], [509, "18+ (player-09)"],
+    [510, "18+ (player-10)"], [511, "18+ (player-11)"], [512, "18+ (player-12)"],
+    [513, "18+ (player-13)"], [514, "18+ (player-14)"], [515, "18+ (player-15)"],
+    [516, "18+ (player-16)"], [517, "18+ (player-17)"], [518, "18+ (player-18)"],
+    [519, "18+ (player-19)"], [520, "18+ (player-20)"], [521, "#vamos spain"],
+    [522, "barca tv spain"], [523, "Real Madrid TV Spain"], [524, "Eurosport 1 Spain"],
+    [525, "Eurosport 2 Spain"], [526, "Movistar Deportes 3 Spain"],
+    [527, "Movistar Deportes 4 Spain"], [528, "Movistar Golf Spain"],
+    [529, "Teledeporte Spain (TDP)"], [530, "Gol Play Spain"], [531, "antena 3 spain"],
+    [532, "Telecinco Spain"], [533, "TVE La 1 Spain"], [534, "La Sexta Spain"],
+    [535, "Cuatro Spain"], [536, "TVE La 2 Spain"], [537, "DAZN F1 ES"],
+    [538, "DAZN LaLiga"], [539, "LaLiga SmartBank TV"], [540, "Canal 11 Portugal"],
+    [541, "One 1 HD Israel"], [542, "One 2 HD Israel"], [543, "Yes Movies Action Israel"],
+    [544, "Yes Movies Kids Israel"], [545, "Yes Movies Comedy Israel"],
+    [546, "Channel 9 Israel"], [547, "Channel 10 Israel"], [548, "Channel 11 Israel"],
+    [549, "Channel 12 Israel"], [551, "Channel 13 Israel"], [552, "Channel 14 Israel"],
+    [553, "Hot3 Israel"], [554, "Sky Sports Racing UK"], [555, "Racing TV UK"],
+    [556, "Sky Sport Top Event DE"], [557, "Sky Sport Mix DE"],
+    [558, "Sky Sport Bundesliga 1 HD"], [559, "Sky Sport Austria 1 HD"],
+    [560, "TVP1 Poland"], [561, "TVP2 Poland"], [562, "Polsat Poland"],
+    [563, "Motowizja Poland"], [564, "Polsat Film Poland"], [565, "TVN HD Poland"],
+    [566, "Canal+ Premium Poland"], [567, "Canal+ Family Poland"],
+    [568, "Filmbox Premium Poland"], [569, "HBO Poland"], [570, "Canal+ Seriale Poland"],
+    [571, "Sportdigital Fussball"], [572, "SuperSport Maximo 1"],
+    [573, "Match Premier Russia"], [574, "Sky Sports Golf Italy"],
+    [575, "Sky Sport MotoGP Italy"], [576, "Sky Sport Tennis Italy"],
+    [577, "Sky Sport F1 Italy"], [578, "bein sports hd qatar"],
+    [579, "arena sport 1 bih"], [580, "arena sport 4 croatia"],
+    [581, "arena sport 4 serbia"], [582, "Nova Sport Serbia"], [583, "Prima Sport 1"],
+    [584, "Prima Sport 2"], [585, "Prima Sport 3"], [586, "Prima Sport 4"],
+    [587, "Sky Sport Select NZ"], [588, "Sky Sport 1 NZ"], [589, "Sky Sport 2 NZ"],
+    [590, "Sky Sport 3 NZ"], [591, "Sky Sport 4 NZ"], [592, "Sky Sport 5 NZ"],
+    [593, "Sky Sport 6 NZ"], [594, "Sky Sport 7 NZ"], [595, "Sky Sport 8 NZ"],
+    [596, "Sky Sport 9 NZ"], [597, "beIN Sports Max AR"], [598, "Willow 2 Cricket"],
+    [599, "Nova Sports Premier League Greece"], [600, "abu dhabi sports 1 uae"],
+    [601, "abu dhabi sports 2 uae"], [602, "CTV Canada"], [603, "Smithsonian Channel"],
+    [604, "Dubai Sports 1 UAE"], [605, "Dubai Sports 2 UAE"], [606, "Dubai Sports 3 UAE"],
+    [607, "Rally TV"], [608, "Dubai Racing 2 UAE"],
+    [609, "abu dhabi sports 1 premium"], [610, "abu dhabi sports 2 premium"],
+    [611, "OnTime Sports"], [612, "arena sports tenis serbia"], [613, "Newsmax USA"],
+    [614, "SSC Sport 1"], [615, "SSC Sport 2"], [616, "SSC Sport 3"],
+    [617, "SSC Sport 4"], [618, "SSC Sport 5"], [619, "SSC Sport Extra 1"],
+    [620, "SSC Sport Extra 2"], [621, "SSC Sport Extra 3"],
+    [622, "Cosmote Sport 1 HD"], [623, "Cosmote Sport 2 HD"],
+    [624, "Cosmote Sport 3 HD"], [625, "Cosmote Sport 4 HD"],
+    [626, "Cosmote Sport 5 HD"], [627, "Cosmote Sport 6 HD"],
+    [628, "Cosmote Sport 7 HD"], [629, "Cosmote Sport 8 HD"],
+    [630, "Cosmote Sport 9 HD"], [631, "Nova Sports 1 Greece"],
+    [632, "Nova Sports 2 Greece"], [633, "Nova Sports 3 Greece"],
+    [634, "Nova Sports 4 Greece"], [635, "Nova Sports 5 Greece"],
+    [636, "Nova Sports 6 Greece"], [637, "Nova Sports Start Greece"],
+    [638, "Nova Sports Prime Greece"], [639, "Nova Sports News Greece"],
+    [640, "Sportdigital1+ Germany"], [641, "Sport1 Germany"],
+    [642, "TNT Sports HD Chile"], [643, "Fox Deportes USA"], [644, "TCM USA"],
+    [645, "L'Equipe France"], [646, "Racer TV USA"], [647, "CMT USA"],
+    [648, "boomerang"], [649, "Nicktoons"], [650, "TeenNick"],
+    [651, "Destination America"], [652, "Disney Jr"], [653, "Pop TV USA"],
+    [654, "My9TV USA"], [655, "WeTV USA"], [656, "IFC TV USA"],
+    [657, "Discovery Family"], [658, "Sundance TV"], [659, "Vice TV"],
+    [660, "TV One USA"], [661, "Discovery Turbo"], [662, "MeTV USA"],
+    [663, "NHL Network USA"], [664, "acc network usa"], [665, "FYI"],
+    [666, "Nick Music"], [667, "NFL RedZone"], [668, "Universal Kids USA"],
+    [669, "Crime+ Investigation USA"], [670, "S4C UK"],
+    [671, "Sky Cinema Premiere UK"], [672, "Sky Cinema Select UK"],
+    [673, "Sky Cinema Hits UK"], [674, "Sky Cinema Greats UK"],
+    [675, "Sky Cinema Animation UK"], [676, "Sky Cinema Family UK"],
+    [677, "Sky Cinema Action UK"], [678, "Sky Cinema Comedy UK"],
+    [679, "Sky Cinema Thriller UK"], [680, "Sky Cinema Drama UK"],
+    [681, "Sky Cinema Sci-Fi Horror UK"], [682, "Sky Showcase UK"],
+    [683, "Sky Arts UK"], [684, "Sky Comedy UK"], [685, "Sky Crime"],
+    [686, "Sky History"], [687, "Gold UK"], [688, "Film4 UK"], [689, "HBO2 USA"],
+    [690, "HBO Comedy USA"], [691, "HBO Family USA"], [692, "HBO Latino USA"],
+    [693, "HBO Signature USA"], [694, "HBO Zone USA"],
+    [695, "Showtime ShoXbet USA"], [696, "Comet USA"], [697, "Cooking Channel USA"],
+    [698, "TMC Channel USA"], [699, "Great American Family Channel (GAC)"],
+    [700, "TV4 Hockey"], [701, "TV4 Tennis"], [702, "TV4 Motor"],
+    [703, "TV4 Sport Live 1"], [704, "TV4 Sport Live 2"], [705, "TV4 Sport Live 3"],
+    [706, "TV4 Sport Live 4"], [707, "TV4 Sportkanalen"], [708, "Sky Max UK"],
+    [709, "Sport Klub Golf Croatia"], [710, "Tennis+ 10"], [711, "Tennis+ 12"],
+    [712, "beIN Sports 1 Malaysia"], [713, "beIN Sports 2 Malaysia"],
+    [714, "beIN Sports 3 Malaysia"], [715, "Cleo TV"], [716, "Sporting TV Portugal"],
+    [717, "axn movies portugal"], [718, "Porto Canal Portugal"], [719, "RTP 1 Portugal"],
+    [720, "RTP 2 Portugal"], [721, "RTP 3 Portugal"], [722, "SIC Portugal"],
+    [723, "TVI Portugal"], [724, "TVI Reality Portugal"], [725, "arte de"],
+    [726, "3sat DE"], [727, "ZDF DE"], [728, "ZDF Info DE"], [729, "Sat.1 DE"],
+    [730, "ProSieben (Pro7) DE"], [731, "Kabel Eins (Kabel 1) DE"], [732, "Sixx DE"],
+    [733, "MDR DE"], [734, "WDR DE"], [735, "SWR DE"], [736, "NDR DE"],
+    [737, "br fernsehen de"], [738, "Super RTL DE"], [739, "SR Fernsehen DE"],
+    [740, "RTL DE"], [741, "Ten Sports PK"], [742, "axs tv usa"],
+    [743, "Galavisión USA"], [744, "Fashion TV"], [745, "Nat Geo Wild USA"],
+    [746, "TyC Sports Argentina"], [747, "TV4 Football Sweden"], [748, "Cozi TV USA"],
+    [749, "MundoToro TV Spain"], [750, "C Span 1"],
+    [751, "FETV - Family Entertainment Television"], [752, "Grit Channel"],
+    [753, "NBC Sports Bay Area"], [754, "NBC Sports Boston"],
+    [755, "NBC Sports California"], [756, "Fox Soccer Plus"], [757, "Fight Network"],
+    [758, "fox sports 2 usa"], [759, "Sportsnet New York (SNY)"], [760, "Globo SP"],
+    [761, "Globo Rio"], [762, "NESN USA"], [763, "YES Network USA"],
+    [764, "Spectrum SportsNet LA"], [765, "MSG USA"], [766, "abc ny usa"],
+    [767, "CBSNY USA"], [768, "FoxNY USA"], [769, "NBCNY USA"],
+    [770, "Marquee Sports Network"], [771, "Premier Sports Ireland 1"],
+    [772, "Eurosport 1 France"], [773, "Eurosport 2 France"], [774, "ERT 1 Greece"],
+    [775, "Fox Weather Channel"], [776, "Chicago Sports Network"],
+    [777, "NBC Sports Philadelphia"], [778, "Monumental Sports Network"],
+    [779, "Max Sport 1 Croatia"], [780, "Max Sport 2 Croatia"], [781, "alkass one"],
+    [782, "alkass two"], [783, "alkass three"], [784, "alkass four"],
+    [785, "Sky Sports Golf DE"], [786, "DStv Mzansi Magic"],
+    [787, "Fox Sports Argentina"], [788, "Fox Sports 2 Argentina"],
+    [789, "Fox Sports 3 Argentina"], [790, "CMTV Portugal"],
+    [791, "MGM+ USA / Epix"], [792, "Showtime 2 USA (SHO2) USA"],
+    [793, "Showtime Showcase USA"], [794, "Showtime Extreme USA"],
+    [795, "Showtime Family Zone (SHO Family Zone) USA"],
+    [796, "Showtime Next (SHO Next) USA"], [797, "Showtime Women USA"],
+    [798, "ESPN3 Argentina"], [799, "Premier Sports Ireland 2"], [800, "6'eren Denmark"],
+    [801, "DR1 Denmark"], [802, "DR2 Denmark"], [803, "Kanal 4 Denmark"],
+    [804, "Kanal 5 Denmark"], [805, "Canal 9 Denmark"], [806, "MTV Denmark"],
+    [807, "TV2 Bornholm Denmark"], [808, "TV2 Sport X Denmark"],
+    [809, "TV3 Sport Denmark"], [810, "TV2 Sport Denmark"], [811, "See Denmark"],
+    [812, "C More First Sweden"], [813, "C More Hits Sweden"],
+    [814, "C More Series Sweden"], [815, "V Film Premiere"], [816, "V Film Family"],
+    [817, "TV2 Denmark"], [818, "TV2 Zulu"], [819, "TV3+ Denmark"],
+    [820, "Fox Sports 502 AU"], [821, "Fox Sports 503 AU"], [822, "Fox Sports 504 AU"],
+    [823, "Fox Sports 505 AU"], [824, "Fox Sports 506 AU"], [825, "Fox Sports 507 AU"],
+    [826, "Liverpool TV (LFC TV)"], [827, "DStv M-Net"], [828, "DStv KykNet & Kie"],
+    [829, "MASN USA"], [830, "Fox Sports Premium MX"], [831, "Citytv"], [832, "CBC CA"],
+    [833, "TVA Sports"], [834, "TVA Sports 2"], [835, "Noovo CA"], [836, "Global CA"],
+    [837, "YES TV CA"], [838, "CTV 2 Canada"], [839, "RDS CA"], [840, "RDS 2 CA"],
+    [841, "RDS Info CA"], [842, "TVO CA"], [843, "Prima TV RO"], [844, "azteca 7 mx"],
+    [845, "NBC Universo"], [846, "Happy TV Serbia"], [847, "Nova S Serbia"],
+    [848, "Outdoor Channel USA"], [849, "Logo TV USA"],[850, "Rai 1 Italy"],
+    [851, "Rai 2 Italy"], [852, "Rai 3 Italy"], [853, "Rai 4 Italy"],
+    [854, "italia 1 italy"], [855, "la7 italy"], [856, "LA7d HD+ Italy"],
+    [857, "20 Mediaset Italy"], [858, "Rai Premium Italy"], [859, "Sky Cinema Collection Italy"],
+    [860, "Sky Cinema Uno Italy"], [861, "Sky Cinema Action Italy"], [862, "Sky Cinema Comedy Italy"],
+    [863, "Sky Cinema Uno +24 Italy"], [864, "Sky Cinema Romance Italy"], [865, "Sky Cinema Family Italy"],
+    [866, "CW Philly"], [867, "Sky Cinema Drama Italy"], [868, "Sky Cinema Suspense Italy"],
+    [869, "Sky Sport 24 Italy"], [870, "Sky Sport Calcio Italy"], [871, "Sky Calcio 1 (251) Italy"],
+    [872, "Sky Calcio 2 (252) Italy"], [873, "Sky Calcio 3 (253) Italy"], [874, "Sky Calcio 4 (254) Italy"],
+    [875, "Sky Sport Basket Italy"], [876, "ITV Quiz"], [877, "DAZN Zona Italy"],
+    [878, "EuroSport 1 Italy"], [879, "EuroSport 2 Italy"], [880, "Sky Serie Italy"],
+    [881, "Sky Uno Italy"], [882, "Rai Sport Italy"], [883, "SBS6 NL"], [884, "Sky Sports Tennis DE"],
+    [885, "Sony Ten 1"], [886, "Sony Ten 2"], [887, "Sony Ten 3"], [888, "ESPN 3 NL"],
+    [889, "TRT Spor TR"], [890, "Bally Sports Arizona"], [891, "FanDuel Sports Network Detroit"],
+    [892, "FanDuel Sports Network Florida"], [893, "FanDuel Sports Network Great Lakes"],
+    [894, "FanDuel Sports Network Indiana"], [895, "FanDuel Sports Network Kansas City"],
+    [896, "FanDuel Sports Network Midwest"], [897, "FanDuel Sports Network New Orleans"],
+    [898, "FanDuel Sports Network North"], [899, "FanDuel Sports Network Ohio"],
+    [900, "FanDuel Sports Network Oklahoma"], [901, "Ziggo Sport 6 NL"],
+    [902, "FanDuel Sports Network SoCal"], [903, "FanDuel Sports Network South"],
+    [904, "FanDuel Sports Network Southeast"], [905, "FanDuel Sports Network Sun"],
+    [906, "FanDuel Sports Network West"], [907, "FanDuel Sports Network Wisconsin"],
+    [908, "FanDuel Sports Network Arizona"], [910, "cbs sports golazo"], [911, "CytaVision Sports 1 Cyprus"],
+    [912, "CytaVision Sports 2 Cyprus"], [913, "CytaVision Sports 3 Cyprus"],
+    [914, "CytaVision Sports 4 Cyprus"], [915, "CytaVision Sports 5 Cyprus"],
+    [916, "CytaVision Sports 6 Cyprus"], [917, "CytaVision Sports 7 Cyprus"],
+    [918, "DAZN Portugal FIFA Mundial de Clubes"], [919, "Ziggo Sport 3 NL"], [920, "root sports northwest"],
+    [921, "Space City Home Network"], [922, "Sportsnet Pittsburgh"], [923, "altitude sports"],
+    [924, "Las Estrellas"], [925, "ESPN 1 MX"], [926, "ESPN 2 MX"], [927, "ESPN 3 MX"],
+    [928, "ESPN 4 MX"], [929, "Fox Sports 1 MX"], [930, "Fox Sports 2 MX"], [931, "Fox Sports 3 MX"],
+    [932, "TVC Deportes MX"], [933, "Claro Sports MX"], [934, "azteca uno mx"], [935, "TUDN MX"],
+    [936, "Canal5 MX"], [940, "arena sport 5 serbia"], [941, "arena sport 6 serbia"],
+    [942, "arena sport 7 serbia"], [943, "arena sport 8 serbia"], [944, "arena sport 9 serbia"],
+    [945, "arena sport 10 serbia"], [946, "Sky Sport Bundesliga 2"], [947, "Sky Sport Bundesliga 3"],
+    [948, "Sky Sport Bundesliga 4"], [949, "Sky Sport Bundesliga 5"], [950, "France 2"],
+    [951, "France 3"], [952, "France 4"], [953, "France 5"], [954, "RMC Story France"],
+    [955, "TMC France"], [956, "C8 France"], [957, "BFM TV France"], [958, "arte france"],
+    [959, "W9 France"], [960, "DAZN Ligue 1 France"], [961, "automoto la chaîne"],
+    [962, "LCI France"], [963, "6ter France"], [964, "CNews France"], [965, "Sport en France"],
+    [970, "Starz Cinema"], [971, "Starz Comedy"], [972, "Starz Edge"], [973, "Starz In Black"],
+    [974, "Starz Kids & Family"], [975, "Starz Encore"], [976, "Starz Encore Action"],
+    [977, "Starz Encore Black"], [978, "Starz Encore Classic"], [979, "Starz Encore Family"],
+    [980, "Starz Encore Suspense"], [981, "Starz Encore Westerns"], [982, "Spectrum SportsNet USA"],
+    [983, "Canal+ Extra 1 Poland"], [984, "Canal+ Extra 2 Poland"], [985, "Canal+ Extra 3 Poland"],
+    [986, "Canal+ Extra 4 Poland"], [987, "Canal+ Extra 5 Poland"], [988, "Canal+ Extra 6 Poland"],
+    [989, "Canal+ Extra 7 Poland"], [990, "MTV Poland"], [991, "Polsat Sport Premium 1 Super HD PL"],
+    [992, "Polsat Sport Premium 2 Super HD PL"], [993, "Polsat Sport Extra 1 HD Poland"],
+    [994, "Polsat Sport Extra 2 HD Poland"], [995, "Polsat Sport Extra 3 HD Poland"],
+    [996, "Polsat Sport Extra 4 HD Poland"], [997, "Polsat Sport Fight HD Poland"],
+    [998, "Polsat Sport News HD Poland"], [999, "Eleven Sports 4 Poland"], [1000, "atv turkey"],
+    [1001, "Kanal D Turkey"], [1002, "Show TV Turkey"], [1003, "Now TV Turkey"],
+    [1004, "Star TV Turkey"], [1005, "TV8 Turkey"], [1010, "beIN Sports 5 Turkey"],
+    [1011, "a spor turkey"], [1020, "Canal+ Sport CZ"], [1021, "Nova Sport 1 CZ"],
+    [1022, "Nova Sport 2 CZ"], [1023, "Nova Sport 3 CZ"], [1024, "Nova Sport 4 CZ"],
+    [1025, "Nova Sport 5 CZ"], [1026, "Nova Sport 6 CZ"], [1027, "OnePlay Sport 1 CZ"],
+    [1028, "OnePlay Sport 2 CZ"], [1029, "OnePlay Sport 3 CZ"], [1030, "Premier Sport 1 CZ"],
+    [1031, "Premier Sport 2 CZ"], [1032, "Premier Sport 3 CZ"], [1033, "CT Sport CZ"],
+    [1034, "Nova HD CZ"], [1035, "CT1 HD CZ"], [1036, "CT2 HD CZ"], [1037, "TN Live CZ"],
+    [1038, "OnePlay Sport 4 CZ"], [1039, "OnePlay MD2 CZ"], [1040, "OnePlay MD3 CZ"],
+    [1041, "OnePlay MD4 CZ"], [1042, "Sport 1 CZ"], [1043, "Canal+ Sport 2 CZ"],
+    [1044, "Canal+ Sport 3 CZ"], [1045, "Canal+ Sport 4 CZ"], [1046, "Canal+ Sport 5 CZ"],
+    [1047, "Canal+ Sport 6 CZ"], [1048, "Canal+ Sport 7 CZ"], [1049, "Canal+ Sport 8 CZ"],
+    [1050, "JOJ SK"], [1051, "Dajto SK"], [1052, "JOJ Šport SK"], [1053, "Voyo Special 1 SK"],
+    [1054, "Voyo Special 2 SK"], [1055, "Voyo Special 3 SK"], [1056, "Voyo Special 4 SK"],
+    [1057, "Voyo Special 7 SK"], [1058, "Voyo Special 8 SK"], [1059, "Voyo Special 9 SK"],
+    [1060, "Nova Sport 3 SK"], [1061, "Nova Sport 4 SK"], [1062, "Nova Sport 5 SK"],
+    [1063, "Canal+ Sport SK"], [1064, "Canal+ Sport 2 SK"], [1065, "Canal+ Sport 3 SK"],
+    [1066, "Canal+ Sport 4 SK"]
+    ];
 
-    // Generate channel buttons
-    function renderChannels(filter = '') {
-      channelGrid.innerHTML = '';
-      const lowerFilter = filter.toLowerCase();
-      
-      channels.forEach(([id, name]) => {
-        if (filter && !name.toLowerCase().includes(lowerFilter) && !id.toString().includes(lowerFilter)) {
-          return; // Skip filtered out
-        }
-        
-        const btn = document.createElement('button');
-        btn.className = 'channel-btn';
-        btn.dataset.url = `https://dlstreams.top/stream/stream-${id}.php`;
-        btn.innerHTML = `
-          <span class="channel-number">#${id}</span>
-          <span class="channel-name">${name}</span>
-        `;
-        btn.addEventListener('click', () => startStream(btn.dataset.url, `${id} - ${name}`));
-        channelGrid.appendChild(btn);
-      });
-      
-      const visible = channelGrid.children.length;
-      stats.textContent = `Showing ${visible} of ${channels.length} channels`;
-    }
+const launcher = document.getElementById('launcher');
+const player = document.getElementById('player');
+const streamFrame = document.getElementById('streamFrame');
+const exitBtn = document.getElementById('exitBtn');
+const currentStream = document.getElementById('currentStream');
+const grid = document.getElementById('channelGrid');
+const searchBox = document.getElementById('searchBox');
+const playerSwitch = document.getElementById('playerSwitch');
 
-    // Start stream
-    function startStream(url, label) {
-      streamFrame.src = url;
-      launcher.style.display = 'none';
-      player.style.display = 'block';
-      exitBtn.style.display = 'block';
-      currentStream.textContent = label;
-      currentStream.style.display = 'block';
-      requestFullscreen(player);
-    }
+let players = [];
+let currentIndex = 0;
+let currentLabel = "";
 
-    // Fullscreen helper
-    function requestFullscreen(element) {
-      if (element.requestFullscreen) {
-        element.requestFullscreen().catch(e => console.log("Fullscreen error:", e));
-      } else if (element.webkitRequestFullscreen) {
-        element.webkitRequestFullscreen();
-      } else if (element.msRequestFullscreen) {
-        element.msRequestFullscreen();
-      }
-    }
+/* Generate players */
+function getPlayers(id) {
+  return [
+    `https://dlstreams.top/stream/stream-${id}.php`,
+    `https://dlstreams.top/cast/stream-${id}.php`,
+    `https://dlstreams.top/watch/stream-${id}.php`,
+    `https://dlstreams.top/plus/stream-${id}.php`,
+    `https://dlstreams.top/casting/stream-${id}.php`,
+    `https://dlstreams.top/player/stream-${id}.php`
+  ];
+}
 
-    // Exit handler
-    function exitStream() {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-      player.style.display = 'none';
-      exitBtn.style.display = 'none';
-      currentStream.style.display = 'none';
-      launcher.style.display = 'flex';
-      // Optional: streamFrame.src = "";
-    }
+/* Render channels */
+function render(filter="") {
+  grid.innerHTML = "";
 
-    // Event listeners
-    exitBtn.addEventListener('click', exitStream);
-    
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && player.style.display === 'block') {
-        exitStream();
-      }
-    });
+  channels.forEach(([id,name]) => {
+    if(filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    // Search functionality
-    let searchTimeout;
-    searchBox.addEventListener('input', (e) => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        renderChannels(e.target.value.trim());
-      }, 150); // Debounce for performance
-    });
+    const btn = document.createElement('button');
+    btn.className = 'channel-btn';
 
-    // Initialize
-    renderChannels();
-    
-    // Focus search on load
-    setTimeout(() => searchBox.focus(), 300);
-  </script>
+    btn.innerHTML = `
+      <span class="channel-number">#${id}</span>
+      <span class="channel-name">${name}</span>
+    `;
+
+    btn.onclick = () => {
+      players = getPlayers(id);
+      currentIndex = 0;
+      currentLabel = `${id} - ${name}`;
+      openPlayer();
+    };
+
+    grid.appendChild(btn);
+  });
+}
+
+/* Open player */
+function openPlayer(){
+  launcher.style.display="none";
+  player.style.display="block";
+  exitBtn.style.display="block";
+  playerSwitch.style.display="flex";
+  currentStream.style.display="block";
+
+  loadPlayer(0);
+  renderSwitch();
+}
+
+/* Load player */
+function loadPlayer(i){
+  currentIndex = i;
+  streamFrame.src = players[i];
+  currentStream.textContent = `${currentLabel} (Player ${i+1})`;
+
+  document.querySelectorAll('.player-btn').forEach((b,idx)=>{
+    b.classList.toggle('active-player', idx===i);
+  });
+}
+
+/* Render switch buttons */
+function renderSwitch(){
+  playerSwitch.innerHTML="";
+
+  players.forEach((_,i)=>{
+    const b=document.createElement('button');
+    b.className='player-btn';
+    b.textContent=`P${i+1}`;
+    b.onclick=()=>loadPlayer(i);
+    playerSwitch.appendChild(b);
+  });
+}
+
+/* Exit */
+exitBtn.onclick=()=>{
+  player.style.display="none";
+  exitBtn.style.display="none";
+  playerSwitch.style.display="none";
+  currentStream.style.display="none";
+  launcher.style.display="flex";
+  streamFrame.src="";
+};
+
+/* Search */
+searchBox.oninput=(e)=>render(e.target.value);
+
+render();
+</script>
+
 </body>
 </html>
+
