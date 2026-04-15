@@ -1,198 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stream Selector - All Channels</title>
-
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #000;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
-      color: white;
-    }
-
-    /* Launcher screen */
-    #launcher {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      padding: 15px;
-      box-sizing: border-box;
-    }
-
-    #launcher header {
-      text-align: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #333;
-      margin-bottom: 10px;
-    }
-
-    #launcher h1 {
-      margin: 0 0 8px 0;
-      font-size: 20px;
-    }
-
-    #searchBox {
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto 15px;
-      padding: 10px 15px;
-      font-size: 14px;
-      border: 1px solid #444;
-      border-radius: 25px;
-      background: #1a1a1a;
-      color: white;
-      outline: none;
-    }
-
-    #channelGrid {
-      flex: 1;
-      overflow-y: auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 8px;
-      padding-right: 5px;
-    }
-
-    .channel-btn {
-      background: #1a1a1a;
-      color: white;
-      padding: 10px 12px;
-      font-size: 13px;
-      border: 1px solid #333;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .channel-btn:hover {
-      background: #e50914;
-      border-color: #e50914;
-      transform: translateY(-1px);
-    }
-
-    .channel-number {
-      font-weight: bold;
-      color: #ff6b6b;
-      font-size: 12px;
-    }
-
-    .channel-btn:hover .channel-number {
-      color: white;
-    }
-
-    .channel-name {
-      font-size: 12px;
-      opacity: 0.95;
-    }
-
-    /* Player */
-    #player {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: black;
-      z-index: 9999;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    #exitBtn {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      z-index: 10000;
-      background: rgba(229, 9, 20, 0.95);
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: none;
-    }
-
-    #currentStream {
-      position: fixed;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10000;
-      background: rgba(30, 30, 30, 0.95);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 11px;
-      display: none;
-      font-family: monospace;
-    }
-
-    /* 🔥 Player Switch Bar (MATCHES YOUR STYLE) */
-    #playerSwitch {
-      position: fixed;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      gap: 6px;
-      z-index: 10000;
-    }
-
-    .player-btn {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      color: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 11px;
-      transition: 0.15s;
-    }
-
-    .player-btn:hover {
-      background: #e50914;
-      border-color: #e50914;
-    }
-
-    .active-player {
-      background: #e50914;
-      border-color: #e50914;
-    }
-
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream Selector - All Channels</title>
+<style>
+html, body {margin:0; padding:0; height:100%; background:#000; font-family:Arial,sans-serif; overflow:hidden; color:white;}
+#launcher {display:flex; flex-direction:column; height:100vh; padding:15px; box-sizing:border-box;}
+#launcher header {text-align:center; padding:10px 0; border-bottom:1px solid #333; margin-bottom:10px;}
+#launcher h1 {margin:0 0 8px 0; font-size:20px;}
+#searchBox {width:100%; max-width:500px; margin:0 auto 15px; padding:10px 15px; font-size:14px; border:1px solid #444; border-radius:25px; background:#1a1a1a; color:white; outline:none;}
+#channelGrid {flex:1; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px; padding-right:5px;}
+.channel-btn {background:#1a1a1a; color:white; padding:10px 12px; font-size:13px; border:1px solid #333; border-radius:6px; cursor:pointer; transition:all 0.15s; text-align:left; display:flex; flex-direction:column; gap:4px;}
+.channel-btn:hover {background:#e50914; border-color:#e50914; transform:translateY(-1px);}
+.channel-top {display:flex; align-items:center; gap:6px;}
+.channel-number {font-weight:bold; color:#ff6b6b; font-size:12px;}
+.channel-btn:hover .channel-number {color:white;}
+.channel-name {white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; opacity:0.95;}
+.player-choice {display:flex; gap:2px;}
+.player-choice button {background:#111; border:1px solid #333; color:white; border-radius:4px; font-size:11px; padding:2px 4px; cursor:pointer; transition:0.15s;}
+.player-choice button:hover {background:#e50914; border-color:#e50914;}
+#player {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999;}
+iframe {width:100%; height:100%; border:none;}
+#exitBtn {position:fixed; top:15px; right:15px; z-index:10000; background:rgba(229,9,20,0.95); color:white; border:none; padding:10px 18px; border-radius:6px; cursor:pointer; display:none; font-size:14px; font-weight:500;}
+#exitBtn:hover {background:rgba(244,6,18,1);}
+#currentStream {position:fixed; bottom:15px; left:50%; transform:translateX(-50%); z-index:10000; background:rgba(30,30,30,0.95); color:#eee; padding:8px 16px; border-radius:20px; font-size:11px; display:none; max-width:95%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace;}
+</style>
 </head>
-
 <body>
 
 <div id="launcher">
   <header>
     <h1>📺 Live Stream Channels</h1>
-    <input id="searchBox" placeholder="Search channels...">
+    <input type="text" id="searchBox" placeholder="🔍 Search channels...">
   </header>
-
   <div id="channelGrid"></div>
+  <div id="stats">Loading channels...</div>
 </div>
 
 <div id="player">
-  <iframe id="streamFrame"></iframe>
+  <iframe id="streamFrame" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
 </div>
 
 <button id="exitBtn">✕ Exit to Menu</button>
 <div id="currentStream"></div>
-
-<!-- 🔥 Player Switch -->
-<div id="playerSwitch"></div>
 
 <script>
     // 📋 Channel data: [id, name]
@@ -489,21 +340,17 @@
     [1066, "Canal+ Sport 4 SK"]
     ];
 
+// DOM elements
 const launcher = document.getElementById('launcher');
 const player = document.getElementById('player');
 const streamFrame = document.getElementById('streamFrame');
 const exitBtn = document.getElementById('exitBtn');
 const currentStream = document.getElementById('currentStream');
-const grid = document.getElementById('channelGrid');
+const channelGrid = document.getElementById('channelGrid');
 const searchBox = document.getElementById('searchBox');
-const playerSwitch = document.getElementById('playerSwitch');
 
-let players = [];
-let currentIndex = 0;
-let currentLabel = "";
-
-/* Generate players */
-function getPlayers(id) {
+// Generate player URLs
+function getPlayers(id){
   return [
     `https://dlstreams.top/stream/stream-${id}.php`,
     `https://dlstreams.top/cast/stream-${id}.php`,
@@ -514,84 +361,85 @@ function getPlayers(id) {
   ];
 }
 
-/* Render channels */
-function render(filter="") {
-  grid.innerHTML = "";
+// Render channels
+function renderChannels(filter=''){
+  channelGrid.innerHTML='';
+  const lowerFilter = filter.toLowerCase();
+  channels.forEach(([id,name])=>{
+    if(filter && !name.toLowerCase().includes(lowerFilter) && !id.toString().includes(lowerFilter)) return;
+    const btn = document.createElement('div');
+    btn.className='channel-btn';
 
-  channels.forEach(([id,name]) => {
-    if(filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
+    // Top row: number + player buttons
+    const topDiv=document.createElement('div');
+    topDiv.className='channel-top';
 
-    const btn = document.createElement('button');
-    btn.className = 'channel-btn';
+    const numSpan=document.createElement('span');
+    numSpan.className='channel-number';
+    numSpan.textContent='#'+id;
+    topDiv.appendChild(numSpan);
 
-    btn.innerHTML = `
-      <span class="channel-number">#${id}</span>
-      <span class="channel-name">${name}</span>
-    `;
+    const players=getPlayers(id);
+    const playerDiv=document.createElement('div');
+    playerDiv.className='player-choice';
+    players.forEach((url,idx)=>{
+      const pBtn=document.createElement('button');
+      pBtn.textContent='P'+(idx+1);
+      pBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openPlayer(url, `${id} - ${name} (Player ${idx+1})`);
+      });
+      playerDiv.appendChild(pBtn);
+    });
+    topDiv.appendChild(playerDiv);
 
-    btn.onclick = () => {
-      players = getPlayers(id);
-      currentIndex = 0;
-      currentLabel = `${id} - ${name}`;
-      openPlayer();
-    };
+    btn.appendChild(topDiv);
 
-    grid.appendChild(btn);
+    const nameSpan=document.createElement('span');
+    nameSpan.className='channel-name';
+    nameSpan.textContent=name;
+    btn.appendChild(nameSpan);
+
+    channelGrid.appendChild(btn);
   });
+  document.getElementById('stats').textContent=`Showing ${channelGrid.children.length} of ${channels.length} channels`;
 }
 
-/* Open player */
-function openPlayer(){
-  launcher.style.display="none";
-  player.style.display="block";
-  exitBtn.style.display="block";
-  playerSwitch.style.display="flex";
-  currentStream.style.display="block";
-
-  loadPlayer(0);
-  renderSwitch();
+// Open player
+function openPlayer(url,label){
+  streamFrame.src=url;
+  launcher.style.display='none';
+  player.style.display='block';
+  exitBtn.style.display='block';
+  currentStream.style.display='block';
+  currentStream.textContent=label;
+  requestFullscreen(player);
 }
 
-/* Load player */
-function loadPlayer(i){
-  currentIndex = i;
-  streamFrame.src = players[i];
-  currentStream.textContent = `${currentLabel} (Player ${i+1})`;
-
-  document.querySelectorAll('.player-btn').forEach((b,idx)=>{
-    b.classList.toggle('active-player', idx===i);
-  });
+// Fullscreen helper
+function requestFullscreen(elem){
+  if(elem.requestFullscreen) elem.requestFullscreen().catch(e=>console.log(e));
+  else if(elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  else if(elem.msRequestFullscreen) elem.msRequestFullscreen();
 }
 
-/* Render switch buttons */
-function renderSwitch(){
-  playerSwitch.innerHTML="";
-
-  players.forEach((_,i)=>{
-    const b=document.createElement('button');
-    b.className='player-btn';
-    b.textContent=`P${i+1}`;
-    b.onclick=()=>loadPlayer(i);
-    playerSwitch.appendChild(b);
-  });
+// Exit
+function exitStream(){
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  player.style.display='none';
+  exitBtn.style.display='none';
+  currentStream.style.display='none';
+  launcher.style.display='flex';
+  streamFrame.src='';
 }
 
-/* Exit */
-exitBtn.onclick=()=>{
-  player.style.display="none";
-  exitBtn.style.display="none";
-  playerSwitch.style.display="none";
-  currentStream.style.display="none";
-  launcher.style.display="flex";
-  streamFrame.src="";
-};
+// Event listeners
+exitBtn.addEventListener('click', exitStream);
+searchBox.addEventListener('input', e=>renderChannels(e.target.value.trim()));
 
-/* Search */
-searchBox.oninput=(e)=>render(e.target.value);
-
-render();
+// Initialize
+renderChannels();
 </script>
-
 </body>
 </html>
 
