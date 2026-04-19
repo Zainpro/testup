@@ -193,6 +193,12 @@
 <script>
     // 📋 Channel data: [id, name]
     const channels = [
+    [1, "ON Sport"], [2, "A"], [3, "A"], [4, "La Liga"], [5, "TV 2"],
+    [6, "TVP 3"], [7, "Sport TV+"], [8, "SK 1 HD"], [9, "SPORTKLUB HD"], [10, "TNT NHL"],
+    [11, "Baseball"], [12, "?"], [13, "A"], [14, "?"], [15, "A"],
+    [16, "A"], [17, "Arena 4 Premium"], [18, "VSport Football"], [19, "Ligue 1+"], [20, "Arena 5 Premium"],
+    [21, "Sky Sport"], [22, "Sky Sport"], [23, "Sky Sport"], [24, "Sky Sport"], [25, "Sky Sport"],
+    [26, "Sky Sport"], [27, "Sky Sport"], [28, "Sky Sport"], [29, "Sky Sport"], [30, "Sky Sport"],
     [31, "TNT Sports 1 UK"], [32, "TNT Sports 2 UK"], [33, "TNT Sports 3 UK"], [34, "TNT Sports 4 UK"],
     [35, "Sky Sports Football UK"], [36, "Sky Sports+ Plus"], [37, "Sky Sports Action UK"], [38, "Sky Sports Main Event"],
     [39, "Fox Sports 1 USA"], [40, "Tennis Channel"], [41, "EuroSport 1 UK"], [42, "EuroSport 2 UK"],
@@ -500,12 +506,13 @@
 
     function getPlayers(id) {
       return [
+        `https://daddylive5.top/live/stream-${id}.php`, 
         `https://dlstreams.top/stream/stream-${id}.php`,
         `https://dlstreams.top/cast/stream-${id}.php`,
         `https://dlstreams.top/watch/stream-${id}.php`,
         `https://dlstreams.top/plus/stream-${id}.php`,
         `https://dlstreams.top/casting/stream-${id}.php`,
-        `https://dlstreams.top/player/stream-${id}.php`
+        `https://dlstreams.top/player/stream-${id}.php`,       
       ];
     }
 
