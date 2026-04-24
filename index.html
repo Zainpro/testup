@@ -80,6 +80,14 @@
       transform: translateY(-1px);
     }
 
+    /* 🔥 ADDED: Sync keyboard focus with hover style */
+    .channel-btn.keyboard-focus {
+      background: #e50914 !important;
+      border-color: #e50914 !important;
+      transform: translateY(-1px) !important;
+      outline: none;
+    }
+
     .channel-number {
       font-weight: bold;
       color: #ff6b6b;
@@ -506,7 +514,8 @@
 
     function getPlayers(id) {
       return [
-        `https://daddylive5.top/live/stream-${id}.php`, 
+        `https://daddylive5.top/live/stream-${id}.php`,
+        `https://daddylive5.top/livemy/stream-${id}.php`,
         `https://dlstreams.top/stream/stream-${id}.php`,
         `https://dlstreams.top/cast/stream-${id}.php`,
         `https://dlstreams.top/watch/stream-${id}.php`,
@@ -529,6 +538,9 @@
           currentLabel = `${id} - ${name}`;
           openPlayer();
         };
+        // 🔥 ADDED: Sync mouse hover with keyboard nav index
+        btn.onmouseenter = () => { navIdx = [...grid.querySelectorAll('.channel-btn')].indexOf(btn); updateKeyboardFocus(); };
+        btn.onmouseleave = () => { if (!grid.matches(':hover')) updateKeyboardFocus(); };
         grid.appendChild(btn);
       });
     }
@@ -577,7 +589,82 @@
 
     searchBox.oninput=(e)=>render(e.target.value);
     render();
+
+    // 🔥 Keyboard + Mouse Sync Navigation (ADDED/UPDATED ONLY THIS BLOCK)
+    let navIdx = -1;
+
+    function updateKeyboardFocus() {
+      const btns = grid.querySelectorAll('.channel-btn');
+      btns.forEach((b, i) => {
+        b.classList.toggle('keyboard-focus', i === navIdx && !b.matches(':hover'));
+      });
+    }
+
+    const gridObserver = new MutationObserver(() => {
+      if (!searchBox.value.trim() && grid.children.length > 0 && navIdx < 0) {
+        navIdx = 0;
+        updateKeyboardFocus();
+        const firstBtn = grid.querySelector('.channel-btn');
+        if (firstBtn) firstBtn.focus({ preventScroll: true });
+      }
+    });
+    gridObserver.observe(grid, { childList: true });
+
+    document.addEventListener('keydown', (e) => {
+      if (launcher.style.display === 'none') return;
+      if (document.activeElement === searchBox) return;
+      
+      const btns = [...grid.querySelectorAll('.channel-btn')];
+      if (btns.length === 0) return;
+      
+      const getCols = () => {
+        if (btns.length < 2) return 1;
+        const firstTop = btns[0].getBoundingClientRect().top;
+        for (let i = 1; i < btns.length; i++) {
+          if (Math.abs(btns[i].getBoundingClientRect().top - firstTop) > 8) return i;
+        }
+        return btns.length;
+      };
+      const cols = getCols();
+      
+      let nextIdx = navIdx;
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextIdx = Math.min(btns.length - 1, navIdx + cols);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        nextIdx = Math.max(0, navIdx - cols);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextIdx = Math.min(btns.length - 1, navIdx + 1);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        nextIdx = Math.max(0, navIdx - 1);
+      } else if ((e.key === 'Enter' || e.key === ' ') && navIdx >= 0 && navIdx < btns.length) {
+        e.preventDefault();
+        btns[navIdx].click();
+        return;
+      } else {
+        return;
+      }
+      
+      if (nextIdx !== navIdx && nextIdx >= 0 && nextIdx < btns.length) {
+        navIdx = nextIdx;
+        const btn = btns[navIdx];
+        btn.focus({ preventScroll: true });
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        updateKeyboardFocus();
+      }
+    });
+
+    // Reset navigation when search changes
+    searchBox.addEventListener('input', () => { navIdx = -1; updateKeyboardFocus(); });
+    
+    // Clear keyboard focus when mouse leaves grid entirely
+    grid.addEventListener('mouseleave', () => { updateKeyboardFocus(); });
 </script>
 
 </body>
 </html>
+
