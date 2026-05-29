@@ -160,18 +160,32 @@
     }
 
     .player-btn {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.5);
-      padding: 4px 10px;
+      background: rgba(20, 20, 30, 0.9);   /* Dark subtle background */
+      color: #4da6ff;                       /* 🔵 BLUE text/letters */
+      border: 2px solid #ff3344;            /* 🔴 RED edge/border */
+      padding: 4px 12px;
       cursor: pointer;
       font-size: 12px;
-      border-radius: 3px;
-      transition: background 0.2s;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-shadow: 0 0 2px rgba(77, 166, 255, 0.5); /* Soft blue glow on text */
     }
 
-    .player-btn:hover, .player-btn.active {
-      background: rgba(255,255,255,0.4);
+    .player-btn:hover {
+      background: rgba(40, 40, 60, 0.95);
+      border-color: #ff6677;                /* Lighter red on hover */
+      color: #80c1ff;                       /* Brighter blue text on hover */
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(255, 51, 68, 0.4);
+    }
+
+    .player-btn.active {
+      background: rgba(30, 30, 50, 1);
+      border-color: #ff0022;                /* Vivid red for active */
+      color: #b3d9ff;                       /* Light blue for active text */
+      box-shadow: 0 0 10px rgba(255, 0, 34, 0.6),
+                  0 0 20px rgba(77, 166, 255, 0.3);
     }
 
   </style>
@@ -235,7 +249,9 @@
     [144, "Sport 5 Israel"], [145, "Sport 5 PLUS Israel"], [146, "Sport 5 Live Israel"], [147, "Sport 5 Star Israel"],
     [148, "Sport 5 Gold Israel"], [149, "ESPN SUR"], [150, "ESPN2 SUR"], [206, "ahc (american heroes channel)"],
     [207, "PPV Event"], [208, "Floracing"], [209, "PPV Event"],[210, "PBS USA USA"],
-    [222, "DAZN PPV"], [223, "TV3 Max Denmark"], [230, "DAZN 1 UK"], [259, "Canal+ Sport 3 Poland"],
+    [222, "DAZN PPV"], [223, "TV3 Max Denmark"], [230, "DAZN 1 UK"], [231, "EuroSport 1"],
+    [231, "EuroSport 1"], [232, "EuroSport 2"], [233, "EuroSport 1"], [234, "EuroSport 2"],
+    [235, "EuroSport 1"], [232, "?"], [233, "?"], [259, "Canal+ Sport 3 Poland"],
     [260, "Vodafone Sport"], [267, "Star Sports 1 IN"], [268, "Star Sports Hindi IN"], [269, "a sport pk"],
     [270, "T Sports BD"], [271, "CANAL+ MotoGP France"], [272, "V Sport Motor Sweden"], [273, "Canal+ Formula 1"],
     [274, "Sky Sports F1 DE"], [275, "Bandsports Brasil"], [276, "LaLigaTV UK"], [277, "NBC10 Philadelphia"],
@@ -514,14 +530,13 @@
 
     function getPlayers(id) {
       return [
-        `https://daddylive5.top/live/stream-${id}.php`,
-        `https://daddylive5.top/livemy/stream-${id}.php`,
-        `https://dlstreams.top/stream/stream-${id}.php`,
-        `https://dlstreams.top/cast/stream-${id}.php`,
-        `https://dlstreams.top/watch/stream-${id}.php`,
-        `https://dlstreams.top/plus/stream-${id}.php`,
-        `https://dlstreams.top/casting/stream-${id}.php`,
-        `https://dlstreams.top/player/stream-${id}.php`,       
+        `https://daddylive1.link/my/stream-${id}.php`,   
+        `https://dlhd.pk/stream/stream-${id}.php`,
+        `https://dlhd.pk/cast/stream-${id}.php`,
+        `https://dlhd.pk/watch/stream-${id}.php`,
+        `https://dlhd.pk/plus/stream-${id}.php`,
+        `https://dlhd.pk/casting/stream-${id}.php`,
+        `https://dlhd.pk/player/stream-${id}.php`,
       ];
     }
 
@@ -667,4 +682,5 @@
 
 </body>
 </html>
+
 
