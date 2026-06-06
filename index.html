@@ -215,7 +215,7 @@
 <script>
     // 📋 Channel data: [id, name]
 const channels = [
-    [0, "Channel not listed #justask"], [1, "Indosiar"], [2, "Tabii Spor 6 Turkey"], [3, "Eleven Sports 4 Poland"], [4, "Hub Premier"],
+    [1, "Indosiar"], [2, "Tabii Spor 6 Turkey"], [3, "Eleven Sports 4 Poland"], [4, "Hub Premier"],
     [5, "Sky Sport Premier League DE"], [6, "V Sport Premium"], [7, "Thmanyah"], [8, "NBA League Pass"], [9, "V Sport Football"],
     [10, "Al Iraqiya Sports"], [11, "DF1 DE"], [12, "ERT 2 Greece"], [13, "ORF 1 Austria"], [14, "NHL Gamecenter"],
     [15, "Arena Sport 1x2 Serbia"], [16, "4seven UK"], [17, "Sport TV7 Portugal"], [18, "Sky Sport 4 DE"], [19, "Sky Sport 3 DE"],
@@ -450,13 +450,14 @@ const channels = [
 
     function getPlayers(id) {
       return [
-        `https://daddylive1.link/my/stream-${id}.php`,   
+        `https://resportz.cfd/live/stream-${id}.php`,  
         `https://dlhd.pk/stream/stream-${id}.php`,
         `https://dlhd.pk/cast/stream-${id}.php`,
         `https://dlhd.pk/watch/stream-${id}.php`,
         `https://dlhd.pk/plus/stream-${id}.php`,
         `https://dlhd.pk/casting/stream-${id}.php`,
         `https://dlhd.pk/player/stream-${id}.php`,
+        `https://daddylive.eu/embed/embed.php?id=${id}&player=1&source=tv.json`,       
       ];
     }
 
@@ -602,5 +603,6 @@ const channels = [
 
 </body>
 </html>
+
 
 
